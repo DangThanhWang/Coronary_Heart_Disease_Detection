@@ -1,3 +1,5 @@
+from pathlib import Path
+
 class MODEL_CONSTANT:
     DELETION_THRESHOLD = 0.02
     MINIMAL_AGE = 0.01
@@ -24,13 +26,15 @@ class MODEL_CONSTANT:
     CAPTURE_TIME = 100
 
 
+DATA_ROOT = Path(r"E:\Coronary_Heart_Disease_Detection\Data\Disease_dataset")
+
 DATASET = {
-    "DatasetA": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/OfficialDatasetA/NumpyData/train/",
-    "DatasetB": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/OfficialDatasetB/NumpyData/train/",
-    "Env1": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env1/NumpyData/",
-    "Env2": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env2/NumpyData/",
-    "Env3": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env3/NumpyData/",
-    "Env4": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env4/NumpyData/",
-    "RandomDataset": "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/RandomDataset/NumpyData/",
+    "DatasetA": str(DATA_ROOT / "OfficialDatasetA" / "NumpyData" / "train"),
+    "DatasetB": str(DATA_ROOT / "OfficialDatasetB" / "NumpyData" / "train"),
+    "Env1": str(DATA_ROOT / "Env1" / "NumpyData"),
+    "Env2": str(DATA_ROOT / "Env2" / "NumpyData"),
+    "Env3": str(DATA_ROOT / "Env3" / "NumpyData"),
+    "Env4": str(DATA_ROOT / "Env4" / "NumpyData"),
+    "Eval": str(DATA_ROOT / "Eval" / "NumpyData"),
+    "RandomDataset": str(DATA_ROOT / "RandomDataset" / "NumpyData"),
 }
-    

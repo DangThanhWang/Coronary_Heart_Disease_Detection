@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime
 import random
+import re
 import matplotlib.pyplot as plt
 import networkx as nx
 import time
@@ -13,6 +14,15 @@ from graph import Graph
 # from new_graph import Graph
 from node import Node
 from constant import MODEL_CONSTANT, DATASET
+
+LABEL_PATTERN = re.compile(r'_(\d)_')
+
+
+def extract_label(filename):
+    match = LABEL_PATTERN.search(filename)
+    if not match:
+        raise ValueError(f"Cannot extract label from filename: {filename}")
+    return int(match.group(1))
 
 
 def softmax(array):
@@ -38,7 +48,7 @@ class LLCS(object):
         self.true_detect = 0
 
         # Current timestamp
-        timestamp_str = datetime.now().strftime("%y-%m-%d-%H:%M:%S")
+        timestamp_str = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 
         self.dataset_log_path = dataset_log_path + timestamp_str + "/"
         os.makedirs(self.dataset_log_path , exist_ok=True)
@@ -48,7 +58,7 @@ class LLCS(object):
 
     def set_log_path(self, dataset_log_path):
         # Current timestamp
-        timestamp_str = timestamp_str = datetime.now().strftime("%y-%m-%d-%H:%M:%S")
+        timestamp_str = timestamp_str = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
 
         self.dataset_log_path = dataset_log_path + timestamp_str + "/"
         os.makedirs(self.dataset_log_path , exist_ok=True)
@@ -117,11 +127,7 @@ class LLCS(object):
                 file_path = os.path.join(dataset_path, filename)
                 ecg_array = np.load(file_path)
 
-                parts = filename.split('_')
-                if len(parts) >= 3:
-                    timestamp, label, file_type = parts
-
-                label = int(label)
+                label = extract_label(filename)
                 
                 output = np.zeros((1, 4), dtype=int)
                 if 0 <= label < 4:
@@ -185,7 +191,11 @@ class LLCS(object):
         count_ra = 0
         count_wn = 0
         count_wa = 0
-        datasetPath = "/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Eval/NumpyData"
+        datasetPath = DATASET.get("Eval")
+
+        if datasetPath is None:
+            raise ValueError("Eval dataset path is not configured in DATASET")
+
         count_true = {
             "0": 0,
             "1": 0,
@@ -200,12 +210,8 @@ class LLCS(object):
                 file_path = os.path.join(datasetPath, filename)
                 ecg_array = np.load(file_path)
 
-                parts = filename.split('_')
-                if len(parts) >= 3:
-                    timestamp, label, file_type = parts
-                count_true[label] += 1
-
-                label = int(label)
+                label = extract_label(filename)
+                count_true[str(label)] += 1
 
                 output = np.zeros((1, 4), dtype=int)
                 if 0 <= label < 4:
@@ -237,17 +243,20 @@ class LLCS(object):
         # print("WN ", count_wn)
         # print("WA ", count_wa)
 
-        accuracy = (count_rn + count_ra + count_wn + count_wa) / (count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]) * 100
+        total_samples = count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]
+        accuracy = (count_rn + count_ra + count_wn + count_wa) / total_samples * 100 if total_samples else 0
         print("Accuracy: ", round(accuracy, 2), "%")
-        tar = (count_ra + count_wa) / (count_true["1"] + count_true["3"]) * 100
+        tar_den = count_true["1"] + count_true["3"]
+        tar = (count_ra + count_wa) / tar_den * 100 if tar_den else 0
         print("True Acceptance Rate (TAR): ", round(tar, 2), "%")
-        far = (count_true["0"] - count_rn + count_true["2"] - count_wn) / (count_true["0"] + count_true["2"]) * 100
+        far_den = count_true["0"] + count_true["2"]
+        far = ((count_true["0"] - count_rn) + (count_true["2"] - count_wn)) / far_den * 100 if far_den else 0
         print("False Acceptance Rate (FAR): ", round(far, 2), "%")
         print("Number of nodes: ", len(self.graph.graph))
 
 
     def numpy_log(self):
-        timestamp_str = timestamp_str = datetime.now().strftime("%y-%m-%d-%H:%M:%S")
+        timestamp_str = timestamp_str = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
         output_path = "./Node_log/"
 
         log_path = output_path + timestamp_str + "/"
@@ -279,3 +288,4 @@ end_time = time.time()
 execution_time = end_time - start_time
 print(f"Execution time for: {execution_time:.2f} seconds")
 print("Number of edges: ", model.graph.get_graph_edge())
+

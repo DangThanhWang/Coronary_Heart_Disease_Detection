@@ -1,10 +1,23 @@
 import numpy as np
 import os
 import random
+import re
 import json
 import time
+from pathlib import Path
 
 TIME_CONSTANT = 100
+
+DATA_ROOT = Path('E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset')
+
+LABEL_PATTERN = re.compile(r'_(\d)_')
+
+
+def extract_label(filename):
+    match = LABEL_PATTERN.search(filename)
+    if not match:
+        raise ValueError(f"Cannot extract label from filename: {filename}")
+    return int(match.group(1))
 
 class Edge:
     def __init__(self, node, age = 1):
@@ -170,11 +183,7 @@ class GNG:
                 file_path = os.path.join(self.dataset_path, filename)
                 ecg_array = np.load(file_path)
 
-                parts = filename.split('_')
-                if len(parts) >= 3:
-                    timestamp, label, file_type = parts
-
-                label = int(label)
+                label = extract_label(filename)
 
                 input_node = Node(ecg_array, label=label)
                 first, second = self.graph.find_best_and_second_best_node(input_node)
@@ -273,11 +282,7 @@ class GNG:
                 file_path = os.path.join(datasetPath, filename)
                 ecg_array = np.load(file_path)
 
-                parts = filename.split('_')
-                if len(parts) >= 3:
-                    timestamp, label, file_type = parts
-
-                label = int(label)
+                label = extract_label(filename)
                 count_true[str(label)] += 1
 
                 input_node = Node(ecg_array, label=label)
@@ -299,40 +304,46 @@ class GNG:
         # print("WN ", count_wn, " out of ", count_true["2"])
         # print("WA ", count_wa, " out of ", count_true["1"])
 
-        accuracy = (count_rn + count_ra + count_wn + count_wa) / (count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]) * 100
+        total_samples = count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]
+        accuracy = (count_rn + count_ra + count_wn + count_wa) / total_samples * 100 if total_samples else 0
         print("Accuracy: ", round(accuracy, 2), "%")
-        tar = (count_ra + count_wa) / (count_true["1"] + count_true["3"]) * 100
+        tar_den = count_true["1"] + count_true["3"]
+        tar = (count_ra + count_wa) / tar_den * 100 if tar_den else 0
         print("True Acceptance Rate (TAR): ", round(tar, 2), "%")
-        far = (count_true["0"] - count_rn + count_true["2"] - count_wn) / (count_true["0"] + count_true["2"]) * 100
+        far_den = count_true["0"] + count_true["2"]
+        far = ((count_true["0"] - count_rn) + (count_true["2"] - count_wn)) / far_den * 100 if far_den else 0
         print("False Acceptance Rate (FAR): ", round(far, 2), "%")
         print("Number of nodes: ", len(self.graph.graph))
 
 
 count_insert = 0
-dataset_path =  '/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env1/NumpyData/'
+dataset_path = str(DATA_ROOT / 'Env1' / 'NumpyData')
 model = GNG(dataset_path=dataset_path, dataset_name="ENV1", max_nodes=1000)
 model.fit(max_epoch=5)
 
 # Change env
 model.dataset_name = "ENV2"
-model.dataset_path = '/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env2/NumpyData/'
+model.dataset_path = str(DATA_ROOT / 'Env2' / 'NumpyData')
 model.fit(max_epoch=5)
 
 # Change env
 model.dataset_name = "ENV3"
-model.dataset_path = '/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env3/NumpyData/'
+model.dataset_path = str(DATA_ROOT / 'Env3' / 'NumpyData')
 model.fit(max_epoch=7)
 
 # Change env
 model.dataset_name = "ENV4"
-model.dataset_path = '/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env4/NumpyData/'
+model.dataset_path = str(DATA_ROOT / 'Env4' / 'NumpyData')
 model.fit(max_epoch=7)
 
 
 # Eval model 
 start_time = time.time()
-model.eval("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Eval/NumpyData/")
+model.eval(str(DATA_ROOT / 'Eval' / 'NumpyData'))
 end_time = time.time()
 execution_time = end_time - start_time
 print(f"Execution time for: {execution_time:.2f} seconds")
 print("Number of edges: ", model.graph.get_edges_number())
+
+
+

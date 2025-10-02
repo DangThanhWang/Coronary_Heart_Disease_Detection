@@ -160,27 +160,27 @@ def load_data_from_directory(directory_path, seed=42):
     return np.array(data), np.array(labels)
 
 if __name__ == "__main__":    
-    data, labels = load_data_from_directory("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env1/NumpyData/")
+    data, labels = load_data_from_directory("E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env1/NumpyData/")
     # Create and train the KSOM model
     som = KSOM(grid_size=10, dim=30*31, learning_rate=0.1, radius=1, max_iter=5, dataset_name="ENV1")
     som.train(data, labels)
 
-    data, labels = load_data_from_directory("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env2/NumpyData/")
+    data, labels = load_data_from_directory("E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env2/NumpyData/")
     som.dataset_name = "ENV2"
     som.max_iter = 5
     som.train(data, labels)
 
     som.dataset_name = "ENV3"
     som.max_iter = 7
-    data, labels = load_data_from_directory("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env3/NumpyData/")
+    data, labels = load_data_from_directory("E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env3/NumpyData/")
     som.train(data, labels)
 
     som.dataset_name = "ENV4"
     som.max_iter = 7
-    data, labels = load_data_from_directory("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env4/NumpyData/")
+    data, labels = load_data_from_directory("E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Env4/NumpyData/")
     som.train(data, labels)
     
-    data, labels = load_data_from_directory("/Users/tannguyen/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Eval/NumpyData/")
+    data, labels = load_data_from_directory("E:/Coronary_Heart_Disease_Detection/Data/Disease_dataset/Eval/NumpyData/")
     count = 0
     count_rn = 0
     count_ra = 0
@@ -217,11 +217,14 @@ if __name__ == "__main__":
     # print("RA ", count_ra)
     # print("WN ", count_wn)
     # print("WA ", count_wa)
-    accuracy = (count_rn + count_ra + count_wn + count_wa) / (count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]) * 100
+    total_samples = count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]
+    accuracy = (count_rn + count_ra + count_wn + count_wa) / total_samples * 100 if total_samples else 0
     print("Accuracy: ", round(accuracy, 2), "%")
-    tar = (count_ra + count_wa) / (count_true["1"] + count_true["3"]) * 100
+    tar_den = count_true["1"] + count_true["3"]
+    tar = (count_ra + count_wa) / tar_den * 100 if tar_den else 0
     print("True Acceptance Rate (TAR): ", round(tar, 2), "%")
-    far = (count_true["0"] - count_rn + count_true["2"] - count_wn) / (count_true["0"] + count_true["2"]) * 100
+    far_den = count_true["0"] + count_true["2"]
+    far = ((count_true["0"] - count_rn) + (count_true["2"] - count_wn)) / far_den * 100 if far_den else 0
     print("False Acceptance Rate (FAR): ", round(far, 2), "%")
 
     end_time = time.time()
