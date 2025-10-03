@@ -2,7 +2,7 @@ import java.lang.Exception;
 import javax.swing.UIManager;
 import java.util.Random;
 import java.time.Instant;
-
+import java.io.File;
 
 public class EcgGen extends javax.swing.JFrame {
     
@@ -16,6 +16,24 @@ public class EcgGen extends javax.swing.JFrame {
     EcgPlotWindow plotWin;
     EcgCalc calcOb;
     EcgExportWindow exportWin;
+
+    private static class GenerationScenario {
+        final String folderName;
+        final String activityType;
+        final int label;
+        final int samples;
+        final double noiseMin;
+        final double noiseMax;
+
+        GenerationScenario(String folderName, String activityType, int label, int samples, double noiseMin, double noiseMax) {
+            this.folderName = folderName;
+            this.activityType = activityType;
+            this.label = label;
+            this.samples = samples;
+            this.noiseMin = noiseMin;
+            this.noiseMax = noiseMax;
+        }
+    }
 
     /** Creates new form ecgApplication */
     public EcgGen() {
@@ -52,6 +70,10 @@ public class EcgGen extends javax.swing.JFrame {
     public EcgExportWindow getExportWindow() {
         return exportWin;
     }
+    
+    private static double randomInRange(Random random, double min, double max) {
+        return min + (max - min) * random.nextDouble();
+    }
 
         /**
      * @param args the command line arguments
@@ -63,52 +85,59 @@ public class EcgGen extends javax.swing.JFrame {
         EcgLogWindow logger = EcgGen.getLog();
         EcgExportWindow dataExporter = EcgGen.getExportWindow(); 
         EcgCalc generator = EcgGen.getCalcOb();
-        
-        String activityType = "Working-Overlap";
-        Integer label = 3;
-        Integer numSample = 1;
-        String destinationLogFolder = "./ECG Generator/Test1";
-        String destinationECGFolder = "./ECG Generator/Test1";
 
+        String baseOutputRoot = "../Data/Generated";
+
+        GenerationScenario[] scenarios = new GenerationScenario[] {
+            new GenerationScenario("Env1", "Resting-Normal", 0, 200, 0.06, 0.12),
+            new GenerationScenario("Env2", "Resting-Abnormal", 1, 200, 0.07, 0.16),
+            new GenerationScenario("Env3", "Working-Normal", 2, 200, 0.08, 0.18),
+            new GenerationScenario("Env4", "Working-Abnormal", 3, 200, 0.10, 0.22),
+            new GenerationScenario("Eval", "Resting-Normal", 0, 80, 0.05, 0.14),
+            new GenerationScenario("Eval", "Resting-Abnormal", 1, 80, 0.06, 0.16),
+            new GenerationScenario("Eval", "Working-Normal", 2, 80, 0.08, 0.20),
+            new GenerationScenario("Eval", "Working-Abnormal", 3, 80, 0.10, 0.24),
+            new GenerationScenario("Eval", "Working-Overlap", 3, 80, 0.12, 0.26)
+        };
 
         Random random = new Random();
         Instant timestamp;
 
-        for (int i = 0; i < numSample; i++) {
-            System.out.println(Integer.toString(i) + " out of " + Integer.toString(numSample));
-            // try {
-            //     Thread.sleep(500); // Pauses the program for 1 second (1000 milliseconds)
-            // } catch (InterruptedException e) {
-            //     e.printStackTrace();
-            // }
-            timestamp = Instant.now();
+        for (GenerationScenario scenario : scenarios) {
+            File logDirectory = new File(baseOutputRoot + "/" + scenario.folderName + "/logs");
+            File csvDirectory = new File(baseOutputRoot + "/" + scenario.folderName + "/csv");
+            logDirectory.mkdirs();
+            csvDirectory.mkdirs();
 
-            // Warning: use for overlap
-            label = random.nextInt(2) + 2;
+            System.out.println("Generating " + scenario.samples + " samples for " + scenario.folderName + " (" + scenario.activityType + ")");
 
-            paramController.resetParameters();
-            paramController.setRandomHrStd(activityType, random);
-            paramController.setRandomHrMean(activityType, random);
-            paramController.setRandomLfHfRatio(activityType, random);
-            paramController.setRandomSeed(random);
-            paramController.setRandomANoise(random);
-            paramController.setRandomFLo(activityType, random);
-            paramController.setRandomFHi(activityType, random);
-            paramController.setRandomAForR(random);
-            paramController.setRandomBForR(random);
-            
-            if (paramController.checkParameters()) {
-                Boolean genSuccess = generator.calculateEcg();
-        
-                if (genSuccess) {
-                    String desFilename = timestamp.toString().replace("/", "") + "_" + Integer.toString(label) + "_" + activityType; // Specify the file path here
-                    // String desFilename = "a"; // Specify the file path here
+            for (int i = 0; i < scenario.samples; i++) {
+                timestamp = Instant.now();
 
-                    desFilename = desFilename.replace(":", "_");  // Replace colons with underscores
+                paramController.resetParameters();
+                paramController.setRandomHrStd(scenario.activityType, random);
+                paramController.setRandomHrMean(scenario.activityType, random);
+                paramController.setRandomLfHfRatio(scenario.activityType, random);
+                paramController.setRandomSeed(random);
+                paramController.setANoise(randomInRange(random, scenario.noiseMin, scenario.noiseMax));
+                paramController.setRandomFLo(scenario.activityType, random);
+                paramController.setRandomFHi(scenario.activityType, random);
+                paramController.setRandomAForR(random);
+                paramController.setRandomBForR(random);
+                
+                if (paramController.checkParameters()) {
+                    Boolean genSuccess = generator.calculateEcg();
+                    if (genSuccess) {
+                        String timestampString = timestamp.toString().replace("/", "").replace(":", "_").replace(".", "_");
+                        String sanitizedActivity = scenario.activityType.replace(" ", "-");
+                        String desFilename = String.format("%s_%d_%s_%04d", timestampString, scenario.label, sanitizedActivity, i);
 
+                        File logFile = new File(logDirectory, desFilename + ".txt");
+                        File csvFile = new File(csvDirectory, desFilename + ".csv");
 
-                    logger.exportTxtLog(destinationLogFolder + "/" + desFilename + ".txt");
-                    dataExporter.exportCsvData(destinationECGFolder + "/" + desFilename + ".csv");
+                        logger.exportTxtLog(logFile.getPath());
+                        dataExporter.exportCsvData(csvFile.getPath());
+                    }
                 }
             }
         }
