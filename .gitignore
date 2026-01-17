@@ -2,12 +2,14 @@
 __pycache__
 .ipynb_checkpoints
 .DS_Store
-
 *.zip
 *.json
 *.csv
 *.txt
 *.png
+*.npy
+*.class
+*.ipynb
 
 test_gen
 test_data
@@ -22,3 +24,12 @@ Dataset_log
 Dataset_log_test
 Official_log
 Thesis_log
+Dataset4
+Dataset5
+Dataset6
+Dataset7
+Dataset8
+Dataset9
+Dataset10
+Dataset11
+Dataset12
