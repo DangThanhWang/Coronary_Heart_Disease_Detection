@@ -132,6 +132,11 @@ def main():
         default=0,
         help="Limit number of CSVs copied per label when splitting.",
     )
+    parser.add_argument(
+        "--clear-target",
+        action="store_true",
+        help="Clear target Env*/csv folders before splitting.",
+    )
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
@@ -155,6 +160,8 @@ def main():
         limit = args.limit_per_label if args.limit_per_label > 0 else None
         for env, labels in env_labels.items():
             target = generated_root / env / "csv"
+            if args.clear_target and target.exists():
+                shutil.rmtree(target)
             copied = copy_csvs(args.source, target, labels, limit_per_label=limit)
             print(f"[split] {env}: copied {copied} files to {target}")
     else:
