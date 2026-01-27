@@ -59,13 +59,26 @@ def load_samples(root: Path, env: str) -> List[Tuple[np.ndarray, int, str, str]]
     return samples
 
 
-def load_ecg_template(csv_path: Path, pre: int, post: int) -> np.ndarray | None:
+def load_ecg_template(
+    csv_path: Path,
+    pre: int,
+    post: int,
+    cache: Dict[Tuple[str, int, int], np.ndarray | None] | None = None,
+) -> np.ndarray | None:
+    if cache is not None:
+        key = (str(csv_path), pre, post)
+        if key in cache:
+            return cache[key]
     df = pd.read_csv(csv_path)
     if "Voltage" not in df.columns or "Peak" not in df.columns:
+        if cache is not None:
+            cache[key] = None
         return None
     voltage = df["Voltage"].to_numpy(dtype=float)
     peaks = df.index[df["Peak"] == 3].to_numpy(dtype=int)
     if len(peaks) == 0:
+        if cache is not None:
+            cache[key] = None
         return None
     beats = []
     for idx in peaks:
@@ -75,9 +88,14 @@ def load_ecg_template(csv_path: Path, pre: int, post: int) -> np.ndarray | None:
             continue
         beats.append(voltage[start:end])
     if not beats:
+        if cache is not None:
+            cache[key] = None
         return None
     beats = np.stack(beats, axis=0)
-    return np.median(beats, axis=0)
+    templ = np.median(beats, axis=0)
+    if cache is not None:
+        cache[key] = templ
+    return templ
 
 
 def align_baseline(vec: np.ndarray, window: int) -> np.ndarray:
@@ -109,7 +127,8 @@ def corr_distance(vec: np.ndarray, matrix: np.ndarray) -> np.ndarray:
 
 
 def hybrid_distance(vec: np.ndarray, matrix: np.ndarray, alpha: float = 0.5) -> np.ndarray:
-    d_euclid = np.linalg.norm(matrix - vec[None, :], axis=1)
+    # Normalize Euclid to RMS to keep scale comparable to (1 - corr)
+    d_euclid = np.sqrt(np.mean((matrix - vec[None, :]) ** 2, axis=1))
     d_corr = corr_distance(vec, matrix)
     return alpha * d_euclid + (1.0 - alpha) * d_corr
 
@@ -176,6 +195,7 @@ def consolidate_env(
     post: int,
     wins_min: int,
     purity_min: float,
+    template_cache: Dict[Tuple[str, int, int], np.ndarray | None],
     consolidated: Dict[Tuple[int, str], Dict],
 ) -> None:
     for node_id, entry in win_log.items():
@@ -198,7 +218,7 @@ def consolidate_env(
         csv_path = cfg.csv_root / env / "csv" / best_name.replace(".npy", ".csv")
         if not csv_path.exists():
             continue
-        templ = load_ecg_template(csv_path, pre, post)
+        templ = load_ecg_template(csv_path, pre, post, cache=template_cache)
         if templ is None:
             continue
         consolidated[key] = {
@@ -231,6 +251,10 @@ def main() -> None:
     parser.add_argument("--baseline-window", type=int, default=20)
     parser.add_argument("--ood-threshold-percentile", type=float, default=95.0)
     parser.add_argument("--ood-threshold-absolute", type=float, default=-1.0)
+    parser.add_argument("--tau-fit-percentile", type=float, default=95.0)
+    parser.add_argument("--tau-fit-mad-k", type=float, default=3.0)
+    parser.add_argument("--tau-min-wins", type=int, default=10)
+    parser.add_argument("--tau-fit-mode", type=str, default="percentile", choices=("percentile", "mad"))
     parser.add_argument(
         "--distance-metric",
         type=str,
@@ -258,6 +282,7 @@ def main() -> None:
     graph = Graph()
     win_log: Dict[int, Dict] = {}
     consolidated: Dict[Tuple[int, str], Dict] = {}
+    template_cache: Dict[Tuple[str, int, int], np.ndarray | None] = {}
 
     for env in cfg.env_order:
         train_llcs(graph, env_samples[env], epochs=args.epochs, win_log=win_log)
@@ -269,6 +294,7 @@ def main() -> None:
             post=args.post,
             wins_min=args.wins_min,
             purity_min=args.purity_min,
+            template_cache=template_cache,
             consolidated=consolidated,
         )
 
@@ -279,7 +305,7 @@ def main() -> None:
     node_templates = []
     for row in proto_meta:
         csv_path = cfg.csv_root / row["env"] / "csv" / row["filename"]
-        templ = load_ecg_template(csv_path, args.pre, args.post)
+        templ = load_ecg_template(csv_path, args.pre, args.post, cache=template_cache)
         if templ is None:
             raise SystemExit(f"Template missing for {csv_path}")
         node_templates.append(templ)
@@ -323,19 +349,64 @@ def main() -> None:
             return corr_distance(vec, matrix)
         return hybrid_distance(vec, matrix, alpha=args.hybrid_alpha)
 
-    # OOD threshold from prototype distances (exclude self)
-    if norm_matrix.shape[0] > 1:
+    # Global threshold from proto-proto distances (fallback)
+    if args.ood_threshold_absolute > 0:
+        global_threshold = float(args.ood_threshold_absolute)
+    elif norm_matrix.shape[0] > 1:
         dist_matrix = np.zeros((norm_matrix.shape[0], norm_matrix.shape[0]), dtype=float)
         for i in range(norm_matrix.shape[0]):
             dist_matrix[i] = compute_distances(norm_matrix[i], norm_matrix)
         np.fill_diagonal(dist_matrix, np.inf)
         nearest = np.min(dist_matrix, axis=1)
-        if args.ood_threshold_absolute > 0:
-            ood_threshold = float(args.ood_threshold_absolute)
-        else:
-            ood_threshold = float(np.percentile(nearest, args.ood_threshold_percentile))
+        global_threshold = float(np.percentile(nearest, args.ood_threshold_percentile))
     else:
-        ood_threshold = float("inf")
+        global_threshold = float("inf")
+
+    # Fit tau per node using template distances on wins (same space as inference)
+    node_to_proto_idx: Dict[int, List[int]] = {}
+    for i, meta in enumerate(proto_meta):
+        node_to_proto_idx.setdefault(meta["node_id"], []).append(i)
+
+    node_thresholds: Dict[int, float] = {}
+    for node_id, entry in win_log.items():
+        if node_id not in node_to_proto_idx:
+            continue
+        wins = entry["wins"]
+        if len(wins) < args.tau_min_wins:
+            continue
+        distances: List[float] = []
+        for env_name, _, name, _ in wins:
+            csv_path = cfg.csv_root / env_name / "csv" / name.replace(".npy", ".csv")
+            if not csv_path.exists():
+                continue
+            templ = load_ecg_template(csv_path, args.pre, args.post, cache=template_cache)
+            if templ is None:
+                continue
+            vec = zscore_vector(align_baseline(templ, args.baseline_window))
+            idx = node_to_proto_idx[node_id]
+            d = compute_distances(vec, norm_matrix[idx])
+            if d.size == 0:
+                continue
+            distances.append(float(np.min(d)))
+        if len(distances) < args.tau_min_wins:
+            continue
+        dist_arr = np.asarray(distances, dtype=float)
+        if args.tau_fit_mode == "mad":
+            med = float(np.median(dist_arr))
+            mad = float(np.median(np.abs(dist_arr - med)))
+            node_thresholds[node_id] = med + args.tau_fit_mad_k * mad
+        else:
+            node_thresholds[node_id] = float(np.percentile(dist_arr, args.tau_fit_percentile))
+
+    # Class thresholds from node thresholds (fallback)
+    class_thresholds: Dict[int, float] = {}
+    for cls in {m["major_label"] for m in proto_meta}:
+        cls_nodes = [m["node_id"] for m in proto_meta if m["major_label"] == cls]
+        cls_vals = [node_thresholds[n] for n in cls_nodes if n in node_thresholds]
+        if cls_vals:
+            class_thresholds[int(cls)] = float(np.median(cls_vals))
+        else:
+            class_thresholds[int(cls)] = global_threshold
 
     # Unknown explanations using long-term memory
     unknown_rows = []
@@ -344,12 +415,23 @@ def main() -> None:
         label = extract_label(path.name)
         if label != 4:
             continue
-        templ = load_ecg_template(path, args.pre, args.post)
+        templ = load_ecg_template(path, args.pre, args.post, cache=template_cache)
         if templ is None:
             continue
         vec = zscore_vector(align_baseline(templ, args.baseline_window))
         d = compute_distances(vec, norm_matrix)
         idx = np.argsort(d)[: args.top_k]
+        if idx.size == 0:
+            continue
+        pred_label = int(proto_meta[idx[0]]["major_label"])
+        pred_node = int(proto_meta[idx[0]]["node_id"])
+        tau = float(
+            node_thresholds.get(
+                pred_node,
+                class_thresholds.get(pred_label, global_threshold),
+            )
+        )
+        is_ood = bool(float(d[idx[0]]) > tau)
         for rank, i in enumerate(idx, start=1):
             meta = proto_meta[i]
             unknown_rows.append(
@@ -361,8 +443,8 @@ def main() -> None:
                     "proto_file": meta["filename"],
                     "node_id": meta["node_id"],
                     "distance": float(d[i]),
-                    "ood_threshold": float(ood_threshold),
-                    "is_ood": bool(float(d[i]) > ood_threshold),
+                    "ood_threshold": tau,
+                    "is_ood": is_ood,
                 }
             )
 
