@@ -34,13 +34,8 @@ def create_matrix(x_axis, y_axis, filename):
             feature_matrix[y_idx, x_idx] = 1
 
     new_row = np.zeros((1, grid_size), dtype=float)
-    if "Resting" in filename:
-        new_value = 0.1
-    elif "Working" in filename:
-        new_value = 0.5
-    else:
-        new_value = 0.0
-    new_row[0, 0] = new_value
+    # Activity flag removed to avoid leakage/shortcut learning.
+    new_row[0, 0] = 0.0
     updated_array = np.append(feature_matrix, new_row, axis=0)
     return updated_array
 
@@ -111,6 +106,18 @@ def main():
         description="Split ECG CSVs into environments and convert to numpy."
     )
     parser.add_argument(
+        "--generated-root",
+        type=Path,
+        default=Path("Data") / "Generated",
+        help="Root folder for generated CSVs (default: Data/Generated).",
+    )
+    parser.add_argument(
+        "--disease-root",
+        type=Path,
+        default=Path("Data") / "Disease_dataset",
+        help="Root folder for output NumpyData (default: Data/Disease_dataset).",
+    )
+    parser.add_argument(
         "--source",
         type=Path,
         default=Path("Data") / "Generated" / "All" / "csv",
@@ -140,8 +147,8 @@ def main():
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
-    generated_root = base_dir / "Generated"
-    disease_root = base_dir / "Disease_dataset"
+    generated_root = args.generated_root if args.generated_root.is_absolute() else base_dir / args.generated_root
+    disease_root = args.disease_root if args.disease_root.is_absolute() else base_dir / args.disease_root
 
     # Class mapping from report:
     # class 1 -> label 0 (Resting-Normal)
@@ -153,7 +160,7 @@ def main():
         "Env2": {0, 1, 3},
         "Env3": {0, 1, 2},
         "Env4": {0, 1, 3},
-        "Eval": {0, 1, 2, 3},
+        "Eval": {0, 1, 2, 3, 4},
     }
 
     if not args.no_split and args.source.exists():

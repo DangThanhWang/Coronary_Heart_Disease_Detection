@@ -86,18 +86,30 @@ public class EcgGen extends javax.swing.JFrame {
         EcgExportWindow dataExporter = EcgGen.getExportWindow(); 
         EcgCalc generator = EcgGen.getCalcOb();
 
-        String baseOutputRoot = "../Data/Generated";
+        String baseOutputRoot = "../Data/Generated_HardOOD3";
 
         GenerationScenario[] scenarios = new GenerationScenario[] {
-            new GenerationScenario("Env1", "Resting-Normal", 0, 200, 0.06, 0.12),
-            new GenerationScenario("Env2", "Resting-Abnormal", 1, 200, 0.07, 0.16),
-            new GenerationScenario("Env3", "Working-Normal", 2, 200, 0.08, 0.18),
-            new GenerationScenario("Env4", "Working-Abnormal", 3, 200, 0.10, 0.22),
-            new GenerationScenario("Eval", "Resting-Normal", 0, 80, 0.05, 0.14),
-            new GenerationScenario("Eval", "Resting-Abnormal", 1, 80, 0.06, 0.16),
-            new GenerationScenario("Eval", "Working-Normal", 2, 80, 0.08, 0.20),
-            new GenerationScenario("Eval", "Working-Abnormal", 3, 80, 0.10, 0.24),
-            new GenerationScenario("Eval", "Working-Overlap", 3, 80, 0.12, 0.26)
+            new GenerationScenario("Env1", "Resting-Normal", 0, 120, 0.05, 0.10),
+            new GenerationScenario("Env1", "Resting-Abnormal", 1, 120, 0.05, 0.10),
+            new GenerationScenario("Env1", "Working-Normal", 2, 120, 0.05, 0.10),
+            new GenerationScenario("Env1", "Working-Abnormal", 3, 120, 0.05, 0.10),
+            new GenerationScenario("Env2", "Resting-Normal", 0, 120, 0.07, 0.14),
+            new GenerationScenario("Env2", "Resting-Abnormal", 1, 120, 0.07, 0.14),
+            new GenerationScenario("Env2", "Working-Normal", 2, 120, 0.07, 0.14),
+            new GenerationScenario("Env2", "Working-Abnormal", 3, 120, 0.07, 0.14),
+            new GenerationScenario("Env3", "Resting-Normal", 0, 120, 0.09, 0.18),
+            new GenerationScenario("Env3", "Resting-Abnormal", 1, 120, 0.09, 0.18),
+            new GenerationScenario("Env3", "Working-Normal", 2, 120, 0.09, 0.18),
+            new GenerationScenario("Env3", "Working-Abnormal", 3, 120, 0.09, 0.18),
+            new GenerationScenario("Env4", "Resting-Normal", 0, 120, 0.11, 0.22),
+            new GenerationScenario("Env4", "Resting-Abnormal", 1, 120, 0.11, 0.22),
+            new GenerationScenario("Env4", "Working-Normal", 2, 120, 0.11, 0.22),
+            new GenerationScenario("Env4", "Working-Abnormal", 3, 120, 0.11, 0.22),
+            new GenerationScenario("Eval", "Resting-Normal", 0, 80, 0.06, 0.14),
+            new GenerationScenario("Eval", "Resting-Abnormal", 1, 80, 0.06, 0.14),
+            new GenerationScenario("Eval", "Working-Normal", 2, 80, 0.08, 0.16),
+            new GenerationScenario("Eval", "Working-Abnormal", 3, 80, 0.08, 0.16),
+            new GenerationScenario("Eval", "Unknown-OOD", 4, 80, 0.08, 0.16)
         };
 
         Random random = new Random();
@@ -122,8 +134,7 @@ public class EcgGen extends javax.swing.JFrame {
                 paramController.setANoise(randomInRange(random, scenario.noiseMin, scenario.noiseMax));
                 paramController.setRandomFLo(scenario.activityType, random);
                 paramController.setRandomFHi(scenario.activityType, random);
-                paramController.setRandomAForR(random);
-                paramController.setRandomBForR(random);
+                paramController.applyMorphologyProfile(scenario.activityType, scenario.folderName, random);
                 
                 if (paramController.checkParameters()) {
                     Boolean genSuccess = generator.calculateEcg();

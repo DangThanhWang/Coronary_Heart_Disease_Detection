@@ -124,6 +124,14 @@ public class EcgParam {
                 
                 value = min + (max - min) * random.nextDouble();
                 break;
+            case "Unknown-OOD":
+                defaultNum = 2.211;
+                range = 0.08;
+                min = defaultNum - range;
+                max = defaultNum + range;
+                
+                value = min + (max - min) * random.nextDouble();
+                break;
             default:
                 System.out.print("Wrong type");
                 // code block
@@ -181,6 +189,12 @@ public class EcgParam {
             case "Working-Overlap":
                 min = 73.00;
                 max = 126.00;
+                
+                value = min + (max - min) * random.nextDouble();
+                break;
+            case "Unknown-OOD":
+                min = 68.00;
+                max = 78.00;
                 
                 value = min + (max - min) * random.nextDouble();
                 break;
@@ -255,6 +269,14 @@ public class EcgParam {
             case "Working-Overlap":
                 defaultNum = 1;
                 range = 0.15;
+                min = defaultNum - range;
+                max = defaultNum + range;
+                
+                value = min + (max - min) * random.nextDouble();
+                break;
+            case "Unknown-OOD":
+                defaultNum = 1.0;
+                range = 0.08;
                 min = defaultNum - range;
                 max = defaultNum + range;
                 
@@ -404,6 +426,14 @@ public class EcgParam {
                 
                 value = min + (max - min) * random.nextDouble();
                 break;
+            case "Unknown-OOD":
+                defaultNum = 0.25;
+                range = 0.03;
+                min = defaultNum - range;
+                max = defaultNum + range;
+                
+                value = min + (max - min) * random.nextDouble();
+                break;
 
             case "Working":
                 break;
@@ -483,6 +513,14 @@ public class EcgParam {
                 
                 value = min + (max - min) * random.nextDouble();
                 break;
+            case "Unknown-OOD":
+                defaultNum = 0.25;
+                range = 0.03;
+                min = defaultNum - range;
+                max = defaultNum + range;
+                
+                value = min + (max - min) * random.nextDouble();
+                break;
 
             case "Working":
                 break;
@@ -553,7 +591,71 @@ public class EcgParam {
         double max = 0.1 + 0.02;
         double value = min + (max - min) * random.nextDouble();
         
-        setA(2, value);
+        setB(2, value);
+    }
+
+    private double randInRange(Random random, double min, double max) {
+        return min + (max - min) * random.nextDouble();
+    }
+
+    public void applyMorphologyProfile(String activityType, String envName, Random random) {
+        double drift;
+        switch (envName) {
+            case "Env2":
+                drift = 0.5;
+                break;
+            case "Env3":
+                drift = 1.0;
+                break;
+            case "Env4":
+                drift = 1.5;
+                break;
+            default:
+                drift = 0.0;
+                break;
+        }
+
+        boolean abnormal = activityType.contains("Abnormal");
+        boolean unknown = activityType.contains("Unknown") || activityType.contains("Overlap");
+
+        double rAmp;
+        double rWidth;
+        double sAmp;
+        double sWidth;
+        double tTheta;
+        double tAmp;
+
+        if (unknown) {
+            double scale = randInRange(random, 0.95, 1.05);
+            // Subtle but consistent morphology shift to separate Unknown from Working-Normal.
+            rAmp = randInRange(random, 24.5, 29.0) * scale - drift * 0.2;
+            rWidth = randInRange(random, 0.08, 0.11);
+            sAmp = randInRange(random, -10.5, -8.2) * scale;
+            sWidth = randInRange(random, 0.10, 0.14);
+            tTheta = randInRange(random, 108.0, 125.0) + drift * 0.4;
+            tAmp = randInRange(random, 0.35, 0.6) * scale;
+        } else if (abnormal) {
+            rAmp = randInRange(random, 20.0, 26.0) - drift;
+            rWidth = randInRange(random, 0.12, 0.16);
+            sAmp = randInRange(random, -10.0, -7.5);
+            sWidth = randInRange(random, 0.12, 0.16);
+            tTheta = randInRange(random, 95.0, 110.0) + drift;
+            tAmp = randInRange(random, 0.4, 0.8);
+        } else {
+            rAmp = randInRange(random, 28.0, 34.0) - drift;
+            rWidth = randInRange(random, 0.08, 0.12);
+            sAmp = randInRange(random, -8.5, -6.5);
+            sWidth = randInRange(random, 0.08, 0.12);
+            tTheta = randInRange(random, 85.0, 100.0) + drift;
+            tAmp = randInRange(random, 0.6, 0.9);
+        }
+
+        setA(2, rAmp);
+        setB(2, rWidth);
+        setA(3, sAmp);
+        setB(3, sWidth);
+        setTheta(4, tTheta);
+        setA(4, tAmp);
     }
 
 
