@@ -462,6 +462,11 @@ def main() -> None:
                 f"{row['label']},{row['env_a']},{row['env_b']},{row['mean_min_distance']:.6f},{row['median_min_distance']:.6f},{row['max_min_distance']:.6f},{row['nodes']}\n"
             )
 
+    with open(out_dir / "dual_memory_node_tau.csv", "w", encoding="utf-8") as f:
+        f.write("node_id,tau\n")
+        for node_id, tau in sorted(node_thresholds.items(), key=lambda x: x[0]):
+            f.write(f"{node_id},{tau:.6f}\n")
+
     with open(out_dir / "dual_memory_unknown_explain.csv", "w", encoding="utf-8") as f:
         f.write("unknown_file,rank,proto_env,proto_label,proto_file,node_id,distance,ood_threshold,is_ood\n")
         for row in unknown_rows:
@@ -472,6 +477,7 @@ def main() -> None:
     print("Dual-memory LLCS waveform XAI saved:")
     print(f"- {out_dir / 'dual_memory_prototypes.csv'}")
     print(f"- {out_dir / 'dual_memory_stability.csv'}")
+    print(f"- {out_dir / 'dual_memory_node_tau.csv'}")
     print(f"- {out_dir / 'dual_memory_unknown_explain.csv'}")
 
 
