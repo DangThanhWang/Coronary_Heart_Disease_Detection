@@ -197,10 +197,10 @@ class LLCS(object):
             raise ValueError("Eval dataset path is not configured in DATASET")
 
         count_true = {
-            "0": 0,
-            "1": 0,
-            "2": 0,
-            "3": 0
+            0: 0,
+            1: 0,
+            2: 0,
+            3: 0,
         }
 
         index = 0
@@ -211,7 +211,9 @@ class LLCS(object):
                 ecg_array = np.load(file_path)
 
                 label = extract_label(filename)
-                count_true[str(label)] += 1
+                if label not in count_true:
+                    continue
+                count_true[label] += 1
 
                 output = np.zeros((1, 4), dtype=int)
                 if 0 <= label < 4:
@@ -243,14 +245,14 @@ class LLCS(object):
         # print("WN ", count_wn)
         # print("WA ", count_wa)
 
-        total_samples = count_true["0"] + count_true["1"] + count_true["2"] + count_true["3"]
+        total_samples = count_true[0] + count_true[1] + count_true[2] + count_true[3]
         accuracy = (count_rn + count_ra + count_wn + count_wa) / total_samples * 100 if total_samples else 0
         print("Accuracy: ", round(accuracy, 2), "%")
-        tar_den = count_true["1"] + count_true["3"]
+        tar_den = count_true[1] + count_true[3]
         tar = (count_ra + count_wa) / tar_den * 100 if tar_den else 0
         print("True Acceptance Rate (TAR): ", round(tar, 2), "%")
-        far_den = count_true["0"] + count_true["2"]
-        far = ((count_true["0"] - count_rn) + (count_true["2"] - count_wn)) / far_den * 100 if far_den else 0
+        far_den = count_true[0] + count_true[2]
+        far = ((count_true[0] - count_rn) + (count_true[2] - count_wn)) / far_den * 100 if far_den else 0
         print("False Acceptance Rate (FAR): ", round(far, 2), "%")
         print("Number of nodes: ", len(self.graph.graph))
 

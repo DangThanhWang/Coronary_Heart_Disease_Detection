@@ -1,0 +1,19 @@
+# Ignore logs
+logs/
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+__pycache__/
+*.pyc
+
+# Ignore large data files (should be in Data/ folder)
+*.mat
+*.dat
+*.hea
+
+# Ignore credentials
+credentials.txt
+.env
+

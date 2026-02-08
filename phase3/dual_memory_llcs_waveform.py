@@ -4,7 +4,7 @@ import random
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -64,6 +64,11 @@ def load_ecg_template(
     pre: int,
     post: int,
     cache: Dict[Tuple[str, int, int], np.ndarray | None] | None = None,
+    rr_filter_k: float = 3.0,
+    adaptive_window: bool = False,
+    adaptive_scale_min: float = 0.7,
+    adaptive_scale_max: float = 1.3,
+    min_peaks: int = 2,
 ) -> np.ndarray | None:
     if cache is not None:
         key = (str(csv_path), pre, post)
@@ -76,17 +81,51 @@ def load_ecg_template(
         return None
     voltage = df["Voltage"].to_numpy(dtype=float)
     peaks = df.index[df["Peak"] == 3].to_numpy(dtype=int)
-    if len(peaks) == 0:
+    if len(peaks) < min_peaks:
         if cache is not None:
             cache[key] = None
         return None
+    if len(peaks) >= 3 and rr_filter_k > 0:
+        rr = np.diff(peaks)
+        med = float(np.median(rr))
+        mad = float(np.median(np.abs(rr - med)))
+        thresh = rr_filter_k * mad if mad > 1e-9 else rr_filter_k * max(1.0, med * 0.1)
+        valid = [peaks[0]]
+        for i in range(1, len(peaks)):
+            rr_i = peaks[i] - peaks[i - 1]
+            if abs(rr_i - med) <= thresh:
+                valid.append(peaks[i])
+        peaks = np.asarray(valid, dtype=int)
+        if len(peaks) < min_peaks:
+            if cache is not None:
+                cache[key] = None
+            return None
     beats = []
-    for idx in peaks:
-        start = idx - pre
-        end = idx + post
+    rr_med = None
+    if adaptive_window and len(peaks) >= 2:
+        rr_med = float(np.median(np.diff(peaks)))
+    for i, idx in enumerate(peaks):
+        pre_i = pre
+        post_i = post
+        if adaptive_window and rr_med and rr_med > 1e-6 and i > 0:
+            rr_i = float(peaks[i] - peaks[i - 1])
+            scale = min(adaptive_scale_max, max(adaptive_scale_min, rr_i / rr_med))
+            pre_i = int(round(pre * scale))
+            post_i = int(round(post * scale))
+        start = idx - pre_i
+        end = idx + post_i
         if start < 0 or end >= len(voltage):
             continue
-        beats.append(voltage[start:end])
+        seg = voltage[start:end]
+        if seg.shape[0] != pre_i + post_i:
+            continue
+        if pre_i + post_i != pre + post:
+            seg = np.interp(
+                np.linspace(0, 1, pre + post, endpoint=False),
+                np.linspace(0, 1, seg.shape[0], endpoint=False),
+                seg,
+            )
+        beats.append(seg)
     if not beats:
         if cache is not None:
             cache[key] = None
@@ -106,10 +145,19 @@ def align_baseline(vec: np.ndarray, window: int) -> np.ndarray:
     return vec - baseline
 
 
-def zscore_vector(vec: np.ndarray) -> np.ndarray:
+def detrend_poly(vec: np.ndarray, order: int = 3) -> np.ndarray:
+    if vec.shape[0] <= order + 1:
+        return vec
+    x = np.arange(vec.shape[0], dtype=float)
+    coeffs = np.polyfit(x, vec, deg=order)
+    baseline = np.polyval(coeffs, x)
+    return vec - baseline
+
+
+def zscore_vector(vec: np.ndarray, min_std: float = 1e-6) -> np.ndarray:
     mean = float(np.mean(vec))
     std = float(np.std(vec))
-    if std < 1e-9:
+    if std < min_std:
         return vec * 0.0
     return (vec - mean) / std
 
@@ -145,6 +193,7 @@ def train_llcs(
     samples: List[Tuple[np.ndarray, int, str, str]],
     epochs: int,
     win_log: Dict[int, Dict],
+    node_uid_map: Dict[int, int],
 ) -> None:
     t_ins = 0
     for _ in range(epochs):
@@ -156,8 +205,13 @@ def train_llcs(
             if first is None or second is None:
                 continue
 
-            node_id = id(first)
-            node_entry = win_log.setdefault(node_id, {"node": first, "wins": [], "counts": {}})
+            node_key = id(first)
+            if node_key not in node_uid_map:
+                node_uid_map[node_key] = len(node_uid_map)
+            node_entry = win_log.setdefault(
+                node_key,
+                {"node": first, "wins": [], "counts": {}, "uid": node_uid_map[node_key]},
+            )
             dist = float(input_node.get_input_distance(first))
             node_entry["wins"].append((env, label, name, dist))
             node_entry["counts"][label] = node_entry["counts"].get(label, 0) + 1
@@ -193,14 +247,27 @@ def consolidate_env(
     env: str,
     pre: int,
     post: int,
-    wins_min: int,
+    wins_min_total: int,
+    wins_min_env: int,
     purity_min: float,
     template_cache: Dict[Tuple[str, int, int], np.ndarray | None],
     consolidated: Dict[Tuple[int, str], Dict],
+    rr_filter_k: float,
+    adaptive_window: bool,
+    adaptive_scale_min: float,
+    adaptive_scale_max: float,
+    min_peaks: int,
+    baseline_method: str,
+    baseline_window: int,
+    baseline_poly_order: int,
+    min_std: float,
+    consolidation_method: str,
+    consolidation_outlier_iqr: float,
+    consolidation_max_candidates: int,
 ) -> None:
     for node_id, entry in win_log.items():
         wins = entry["wins"]
-        if len(wins) < wins_min:
+        if len(wins) < wins_min_total:
             continue
         label_counts = entry["counts"]
         major_label, major_count = max(label_counts.items(), key=lambda x: x[1])
@@ -209,20 +276,83 @@ def consolidate_env(
             continue
 
         env_wins = [(name, label, dist) for env_name, label, name, dist in wins if env_name == env]
+        if len(env_wins) < wins_min_env:
+            continue
         if not env_wins:
             continue
-        best_name, best_label, best_dist = min(env_wins, key=lambda x: x[2])
-        key = (node_id, env)
+        env_wins_sorted = sorted(env_wins, key=lambda x: x[2])
+        if consolidation_outlier_iqr > 0 and len(env_wins_sorted) >= 4:
+            dists = np.asarray([d for _, _, d in env_wins_sorted], dtype=float)
+            q1, q3 = np.percentile(dists, [25, 75])
+            iqr = q3 - q1
+            cutoff = q3 + consolidation_outlier_iqr * iqr
+            env_wins_sorted = [w for w in env_wins_sorted if w[2] <= cutoff] or env_wins_sorted
+
+        candidates = env_wins_sorted
+        if consolidation_max_candidates > 0 and len(candidates) > consolidation_max_candidates:
+            candidates = candidates[:consolidation_max_candidates]
+
+        best_name: Optional[str] = None
+        best_label: Optional[int] = None
+        best_dist: Optional[float] = None
+        if consolidation_method == "medoid" and len(candidates) >= 3:
+            vectors = []
+            meta = []
+            for name, label, dist in candidates:
+                csv_path = cfg.csv_root / env / "csv" / name.replace(".npy", ".csv")
+                if not csv_path.exists():
+                    continue
+                templ = load_ecg_template(
+                    csv_path,
+                    pre,
+                    post,
+                    cache=template_cache,
+                    rr_filter_k=rr_filter_k,
+                    adaptive_window=adaptive_window,
+                    adaptive_scale_min=adaptive_scale_min,
+                    adaptive_scale_max=adaptive_scale_max,
+                    min_peaks=min_peaks,
+                )
+                if templ is None:
+                    continue
+                if baseline_method == "poly":
+                    vec = detrend_poly(templ, order=baseline_poly_order)
+                elif baseline_method == "window":
+                    vec = align_baseline(templ, baseline_window)
+                else:
+                    vec = templ
+                vec = zscore_vector(vec, min_std=min_std)
+                vectors.append(vec)
+                meta.append((name, label, dist))
+            if len(vectors) >= 3:
+                mat = np.stack(vectors, axis=0)
+                dist_mat = np.linalg.norm(mat[:, None, :] - mat[None, :, :], axis=2)
+                medoid_idx = int(np.argmin(np.sum(dist_mat, axis=1)))
+                best_name, best_label, best_dist = meta[medoid_idx]
+        if best_name is None:
+            best_name, best_label, best_dist = min(env_wins_sorted, key=lambda x: x[2])
+
+        key = (entry["uid"], env)
         if key in consolidated:
             continue
         csv_path = cfg.csv_root / env / "csv" / best_name.replace(".npy", ".csv")
         if not csv_path.exists():
             continue
-        templ = load_ecg_template(csv_path, pre, post, cache=template_cache)
+        templ = load_ecg_template(
+            csv_path,
+            pre,
+            post,
+            cache=template_cache,
+            rr_filter_k=rr_filter_k,
+            adaptive_window=adaptive_window,
+            adaptive_scale_min=adaptive_scale_min,
+            adaptive_scale_max=adaptive_scale_max,
+            min_peaks=min_peaks,
+        )
         if templ is None:
             continue
         consolidated[key] = {
-            "node_id": node_id,
+            "node_id": entry["uid"],
             "env": env,
             "label": best_label,
             "major_label": major_label,
@@ -247,8 +377,17 @@ def main() -> None:
     parser.add_argument("--post", type=int, default=120)
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument("--wins-min", type=int, default=5)
+    parser.add_argument("--wins-min-env", type=int, default=3)
     parser.add_argument("--purity-min", type=float, default=0.8)
     parser.add_argument("--baseline-window", type=int, default=20)
+    parser.add_argument("--baseline-method", type=str, default="window", choices=("window", "poly", "none"))
+    parser.add_argument("--baseline-poly-order", type=int, default=3)
+    parser.add_argument("--zscore-min-std", type=float, default=1e-6)
+    parser.add_argument("--rr-filter-k", type=float, default=3.0)
+    parser.add_argument("--min-peaks", type=int, default=2)
+    parser.add_argument("--adaptive-window", action="store_true")
+    parser.add_argument("--adaptive-scale-min", type=float, default=0.7)
+    parser.add_argument("--adaptive-scale-max", type=float, default=1.3)
     parser.add_argument("--ood-threshold-percentile", type=float, default=95.0)
     parser.add_argument("--ood-threshold-absolute", type=float, default=-1.0)
     parser.add_argument("--tau-fit-percentile", type=float, default=95.0)
@@ -262,6 +401,9 @@ def main() -> None:
         choices=("euclid", "corr", "hybrid"),
     )
     parser.add_argument("--hybrid-alpha", type=float, default=0.5)
+    parser.add_argument("--consolidation-method", type=str, default="medoid", choices=("nearest", "medoid"))
+    parser.add_argument("--consolidation-outlier-iqr", type=float, default=1.5)
+    parser.add_argument("--consolidation-max-candidates", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -283,19 +425,39 @@ def main() -> None:
     win_log: Dict[int, Dict] = {}
     consolidated: Dict[Tuple[int, str], Dict] = {}
     template_cache: Dict[Tuple[str, int, int], np.ndarray | None] = {}
+    node_uid_map: Dict[int, int] = {}
 
     for env in cfg.env_order:
-        train_llcs(graph, env_samples[env], epochs=args.epochs, win_log=win_log)
+        train_llcs(
+            graph,
+            env_samples[env],
+            epochs=args.epochs,
+            win_log=win_log,
+            node_uid_map=node_uid_map,
+        )
         consolidate_env(
             cfg,
             win_log,
             env,
             pre=args.pre,
             post=args.post,
-            wins_min=args.wins_min,
+            wins_min_total=args.wins_min,
+            wins_min_env=args.wins_min_env,
             purity_min=args.purity_min,
             template_cache=template_cache,
             consolidated=consolidated,
+            rr_filter_k=args.rr_filter_k,
+            adaptive_window=args.adaptive_window,
+            adaptive_scale_min=args.adaptive_scale_min,
+            adaptive_scale_max=args.adaptive_scale_max,
+            min_peaks=args.min_peaks,
+            baseline_method=args.baseline_method,
+            baseline_window=args.baseline_window,
+            baseline_poly_order=args.baseline_poly_order,
+            min_std=args.zscore_min_std,
+            consolidation_method=args.consolidation_method,
+            consolidation_outlier_iqr=args.consolidation_outlier_iqr,
+            consolidation_max_candidates=args.consolidation_max_candidates,
         )
 
     if not consolidated:
@@ -305,13 +467,30 @@ def main() -> None:
     node_templates = []
     for row in proto_meta:
         csv_path = cfg.csv_root / row["env"] / "csv" / row["filename"]
-        templ = load_ecg_template(csv_path, args.pre, args.post, cache=template_cache)
+        templ = load_ecg_template(
+            csv_path,
+            args.pre,
+            args.post,
+            cache=template_cache,
+            rr_filter_k=args.rr_filter_k,
+            adaptive_window=args.adaptive_window,
+            adaptive_scale_min=args.adaptive_scale_min,
+            adaptive_scale_max=args.adaptive_scale_max,
+            min_peaks=args.min_peaks,
+        )
         if templ is None:
             raise SystemExit(f"Template missing for {csv_path}")
         node_templates.append(templ)
 
+    def normalize_template(vec: np.ndarray) -> np.ndarray:
+        if args.baseline_method == "poly":
+            vec = detrend_poly(vec, order=args.baseline_poly_order)
+        elif args.baseline_method == "window":
+            vec = align_baseline(vec, args.baseline_window)
+        return zscore_vector(vec, min_std=args.zscore_min_std)
+
     norm_matrix = np.stack(
-        [zscore_vector(align_baseline(t, args.baseline_window)) for t in node_templates],
+        [normalize_template(t) for t in node_templates],
         axis=0,
     )
 
@@ -369,7 +548,8 @@ def main() -> None:
 
     node_thresholds: Dict[int, float] = {}
     for node_id, entry in win_log.items():
-        if node_id not in node_to_proto_idx:
+        node_uid = entry["uid"]
+        if node_uid not in node_to_proto_idx:
             continue
         wins = entry["wins"]
         if len(wins) < args.tau_min_wins:
@@ -379,11 +559,21 @@ def main() -> None:
             csv_path = cfg.csv_root / env_name / "csv" / name.replace(".npy", ".csv")
             if not csv_path.exists():
                 continue
-            templ = load_ecg_template(csv_path, args.pre, args.post, cache=template_cache)
+            templ = load_ecg_template(
+                csv_path,
+                args.pre,
+                args.post,
+                cache=template_cache,
+                rr_filter_k=args.rr_filter_k,
+                adaptive_window=args.adaptive_window,
+                adaptive_scale_min=args.adaptive_scale_min,
+                adaptive_scale_max=args.adaptive_scale_max,
+                min_peaks=args.min_peaks,
+            )
             if templ is None:
                 continue
-            vec = zscore_vector(align_baseline(templ, args.baseline_window))
-            idx = node_to_proto_idx[node_id]
+            vec = normalize_template(templ)
+            idx = node_to_proto_idx[node_uid]
             d = compute_distances(vec, norm_matrix[idx])
             if d.size == 0:
                 continue
@@ -394,9 +584,9 @@ def main() -> None:
         if args.tau_fit_mode == "mad":
             med = float(np.median(dist_arr))
             mad = float(np.median(np.abs(dist_arr - med)))
-            node_thresholds[node_id] = med + args.tau_fit_mad_k * mad
+            node_thresholds[node_uid] = med + args.tau_fit_mad_k * mad
         else:
-            node_thresholds[node_id] = float(np.percentile(dist_arr, args.tau_fit_percentile))
+            node_thresholds[node_uid] = float(np.percentile(dist_arr, args.tau_fit_percentile))
 
     # Class thresholds from node thresholds (fallback)
     class_thresholds: Dict[int, float] = {}
@@ -415,25 +605,42 @@ def main() -> None:
         label = extract_label(path.name)
         if label != 4:
             continue
-        templ = load_ecg_template(path, args.pre, args.post, cache=template_cache)
+        templ = load_ecg_template(
+            path,
+            args.pre,
+            args.post,
+            cache=template_cache,
+            rr_filter_k=args.rr_filter_k,
+            adaptive_window=args.adaptive_window,
+            adaptive_scale_min=args.adaptive_scale_min,
+            adaptive_scale_max=args.adaptive_scale_max,
+            min_peaks=args.min_peaks,
+        )
         if templ is None:
             continue
-        vec = zscore_vector(align_baseline(templ, args.baseline_window))
+        vec = normalize_template(templ)
         d = compute_distances(vec, norm_matrix)
         idx = np.argsort(d)[: args.top_k]
         if idx.size == 0:
             continue
         pred_label = int(proto_meta[idx[0]]["major_label"])
         pred_node = int(proto_meta[idx[0]]["node_id"])
-        tau = float(
+        tau_best = float(
             node_thresholds.get(
                 pred_node,
                 class_thresholds.get(pred_label, global_threshold),
             )
         )
-        is_ood = bool(float(d[idx[0]]) > tau)
+        is_ood_best = bool(float(d[idx[0]]) > tau_best)
         for rank, i in enumerate(idx, start=1):
             meta = proto_meta[i]
+            tau_rank = float(
+                node_thresholds.get(
+                    int(meta["node_id"]),
+                    class_thresholds.get(int(meta["major_label"]), global_threshold),
+                )
+            )
+            is_ood_rank = bool(float(d[i]) > tau_rank)
             unknown_rows.append(
                 {
                     "unknown_file": path.name,
@@ -443,8 +650,10 @@ def main() -> None:
                     "proto_file": meta["filename"],
                     "node_id": meta["node_id"],
                     "distance": float(d[i]),
-                    "ood_threshold": tau,
-                    "is_ood": is_ood,
+                    "ood_threshold": tau_rank,
+                    "is_ood": is_ood_rank,
+                    "ood_threshold_best": tau_best,
+                    "is_ood_best": is_ood_best,
                 }
             )
 
@@ -468,10 +677,16 @@ def main() -> None:
             f.write(f"{node_id},{tau:.6f}\n")
 
     with open(out_dir / "dual_memory_unknown_explain.csv", "w", encoding="utf-8") as f:
-        f.write("unknown_file,rank,proto_env,proto_label,proto_file,node_id,distance,ood_threshold,is_ood\n")
+        f.write(
+            "unknown_file,rank,proto_env,proto_label,proto_file,node_id,distance,"
+            "ood_threshold,is_ood,ood_threshold_best,is_ood_best\n"
+        )
         for row in unknown_rows:
             f.write(
-                f"{row['unknown_file']},{row['rank']},{row['proto_env']},{row['proto_label']},{row['proto_file']},{row['node_id']},{row['distance']:.6f},{row['ood_threshold']:.6f},{int(row['is_ood'])}\n"
+                f"{row['unknown_file']},{row['rank']},{row['proto_env']},{row['proto_label']},"
+                f"{row['proto_file']},{row['node_id']},{row['distance']:.6f},"
+                f"{row['ood_threshold']:.6f},{int(row['is_ood'])},"
+                f"{row['ood_threshold_best']:.6f},{int(row['is_ood_best'])}\n"
             )
 
     print("Dual-memory LLCS waveform XAI saved:")

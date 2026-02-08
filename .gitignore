@@ -1,29 +1,56 @@
+# Python
 .venv
 __pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Jupyter
 .ipynb_checkpoints
+*.ipynb
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Archives
 *.zip
+*.tar.gz
+*.rar
+
+# Data files (large)
+*.npy
+*.mat
+*.hea
+*.dat
+
+# Output files
 *.json
 *.csv
 *.txt
 *.png
-*.npy
-*.class
-*.ipynb
+*.jpg
+*.jpeg
+*.pdf
 
+# Java
+*.class
+
+# Datasets (CRITICAL - exclude all data directories)
+Data/PTBXL/
+Data/arrhythmia-study/
+Data/Disease_dataset*/
+Data/Generated_*/
+Data/Data/
+
+# Old datasets
 test_gen
 test_data
 Dataset1
 Dataset2
-Disease_dataset
-Draft
-0410
-Experiment1_NonOverlap
-Overlap_testing_5000
-Dataset_log
-Dataset_log_test
-Official_log
-Thesis_log
+Dataset3
 Dataset4
 Dataset5
 Dataset6
@@ -33,3 +60,31 @@ Dataset9
 Dataset10
 Dataset11
 Dataset12
+Disease_dataset
+Draft
+0410
+Experiment1_NonOverlap
+Overlap_testing_5000
+Dataset_log
+Dataset_log_test
+Official_log
+Thesis_log
+
+# Artifacts (model outputs)
+artifacts/
+results/
+outputs/
+checkpoints/
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary
+tmp/
+temp/
+*.tmp
