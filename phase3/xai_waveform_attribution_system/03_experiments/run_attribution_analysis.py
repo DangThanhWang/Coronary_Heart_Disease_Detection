@@ -170,21 +170,24 @@ def analyze_dataset(dataset_name: str, proto_csv: str, csv_root: str,
     
     print(f"  Saved summary: {summary_csv.name}")
     
-    print(f"\n[5/5] Generating final report...")
+    print(f"\n[5/5] Summary statistics:")
     
-    # Statistics with confidence intervals
-    print(f"\n  STATISTICS (n={len(summary_df)} comparisons):")
-    print(f"  - Overall similarity: {summary_df['overall_similarity'].mean():.3f} ± {summary_df['overall_similarity'].std():.3f}")
-    print(f"  - QRS similarity:     {summary_df['QRS_similarity'].mean():.3f} ± {summary_df['QRS_similarity'].std():.3f}")
-    print(f"  - T-wave similarity:  {summary_df['T_wave_similarity'].mean():.3f} ± {summary_df['T_wave_similarity'].std():.3f}")
-    print(f"  - P-wave similarity:  {summary_df['P_wave_similarity'].mean():.3f} ± {summary_df['P_wave_similarity'].std():.3f}")
-    print(f"\n  IMPORTANCE:")
-    print(f"  - QRS: {summary_df['QRS_importance'].mean():.3f} ± {summary_df['QRS_importance'].std():.3f}")
-    print(f"  - T:   {summary_df['T_importance'].mean():.3f} ± {summary_df['T_importance'].std():.3f}")
+    # Report statistics objectively
+    print(f"\n  Sample size: n={len(summary_df)} comparisons")
+    print(f"\n  Similarity scores (mean ± std):")
+    print(f"    Overall: {summary_df['overall_similarity'].mean():.3f} ± {summary_df['overall_similarity'].std():.3f}")
+    print(f"    QRS:     {summary_df['QRS_similarity'].mean():.3f} ± {summary_df['QRS_similarity'].std():.3f}")
+    print(f"    T-wave:  {summary_df['T_wave_similarity'].mean():.3f} ± {summary_df['T_wave_similarity'].std():.3f}")
+    print(f"    P-wave:  {summary_df['P_wave_similarity'].mean():.3f} ± {summary_df['P_wave_similarity'].std():.3f}")
     
-    # Which segment is most important?
+    print(f"\n  Importance weights:")
+    print(f"    QRS:   {summary_df['QRS_importance'].mean():.3f} ± {summary_df['QRS_importance'].std():.3f}")
+    print(f"    T-wave: {summary_df['T_importance'].mean():.3f} ± {summary_df['T_importance'].std():.3f}")
+    
+    # Report which segment has highest importance (objective fact)
     avg_importance = summary_df[['QRS_importance', 'T_importance']].mean()
-    print(f"\n  MOST IMPORTANT SEGMENT: {'QRS' if avg_importance['QRS_importance'] > avg_importance['T_importance'] else 'T-wave'}")
+    dominant_segment = 'QRS' if avg_importance['QRS_importance'] > avg_importance['T_importance'] else 'T-wave'
+    print(f"\n  Dominant segment: {dominant_segment}")
     
     print(f"\n{'='*80}")
     print(f"COMPLETED: {dataset_name}")
@@ -198,7 +201,7 @@ def main():
     """Run attribution analysis on both datasets"""
     
     print("\n" + "="*80)
-    print("WAVEFORM-TO-WAVEFORM ATTRIBUTION XAI")
+    print("WAVEFORM-TO-WAVEFORM ATTRIBUTION ANALYSIS")
     print("="*80)
     
     # HardOOD3
@@ -227,101 +230,55 @@ def main():
         print(f"ERROR: {e}")
         ch_summary = None
     
-    # Compare
+    # Cross-dataset comparison
     print("\n" + "="*80)
-    print("[CROSS-DATASET COMPARISON]")
+    print("CROSS-DATASET COMPARISON")
     print("="*80)
     
     if h3_summary is not None and ch_summary is not None:
-        print("\nQRS Importance:")
+        print("\nQRS importance:")
         print(f"  HardOOD3: {h3_summary['QRS_importance'].mean():.3f} ± {h3_summary['QRS_importance'].std():.3f}")
         print(f"  Chapman:  {ch_summary['QRS_importance'].mean():.3f} ± {ch_summary['QRS_importance'].std():.3f}")
+        print(f"  Difference: {abs(h3_summary['QRS_importance'].mean() - ch_summary['QRS_importance'].mean()):.3f}")
         
-        print("\nT-wave Importance:")
+        print("\nT-wave importance:")
         print(f"  HardOOD3: {h3_summary['T_importance'].mean():.3f} ± {h3_summary['T_importance'].std():.3f}")
         print(f"  Chapman:  {ch_summary['T_importance'].mean():.3f} ± {ch_summary['T_importance'].std():.3f}")
+        print(f"  Difference: {abs(h3_summary['T_importance'].mean() - ch_summary['T_importance'].mean()):.3f}")
         
-        print("\nP-wave Similarity (Adaptive Segmentation Test):")
+        print("\nP-wave similarity:")
         print(f"  HardOOD3: {h3_summary['P_wave_similarity'].mean():.3f} ± {h3_summary['P_wave_similarity'].std():.3f}")
         print(f"  Chapman:  {ch_summary['P_wave_similarity'].mean():.3f} ± {ch_summary['P_wave_similarity'].std():.3f}")
         
-        qrs_consistent = abs(h3_summary['QRS_importance'].mean() - ch_summary['QRS_importance'].mean()) < 0.1
-        t_consistent = abs(h3_summary['T_importance'].mean() - ch_summary['T_importance'].mean()) < 0.1
-        p_improved = ch_summary['P_wave_similarity'].mean() > 0.3  # Threshold for "good"
+        print("\nQRS similarity:")
+        print(f"  HardOOD3: {h3_summary['QRS_similarity'].mean():.3f} ± {h3_summary['QRS_similarity'].std():.3f}")
+        print(f"  Chapman:  {ch_summary['QRS_similarity'].mean():.3f} ± {ch_summary['QRS_similarity'].std():.3f}")
         
-        print(f"\nConsistency:")
-        print(f"  QRS: {'CONSISTENT' if qrs_consistent else 'INCONSISTENT'}")
-        print(f"  T-wave: {'CONSISTENT' if t_consistent else 'INCONSISTENT'}")
-        print(f"  P-wave (Chapman): {'IMPROVED' if p_improved else 'STILL LOW'}")
+        print("\nT-wave similarity:")
+        print(f"  HardOOD3: {h3_summary['T_wave_similarity'].mean():.3f} ± {h3_summary['T_wave_similarity'].std():.3f}")
+        print(f"  Chapman:  {ch_summary['T_wave_similarity'].mean():.3f} ± {ch_summary['T_wave_similarity'].std():.3f}")
+        
+        # Export comparison report
+        comparison_report = {
+            'Dataset': ['HardOOD3', 'Chapman'],
+            'n_samples': [len(h3_summary), len(ch_summary)],
+            'QRS_similarity_mean': [h3_summary['QRS_similarity'].mean(), ch_summary['QRS_similarity'].mean()],
+            'QRS_similarity_std': [h3_summary['QRS_similarity'].std(), ch_summary['QRS_similarity'].std()],
+            'P_wave_similarity_mean': [h3_summary['P_wave_similarity'].mean(), ch_summary['P_wave_similarity'].mean()],
+            'P_wave_similarity_std': [h3_summary['P_wave_similarity'].std(), ch_summary['P_wave_similarity'].std()],
+            'T_wave_similarity_mean': [h3_summary['T_wave_similarity'].mean(), ch_summary['T_wave_similarity'].mean()],
+            'T_wave_similarity_std': [h3_summary['T_wave_similarity'].std(), ch_summary['T_wave_similarity'].std()],
+            'QRS_importance_mean': [h3_summary['QRS_importance'].mean(), ch_summary['QRS_importance'].mean()],
+            'T_importance_mean': [h3_summary['T_importance'].mean(), ch_summary['T_importance'].mean()],
+        }
+        
+        comparison_df = pd.DataFrame(comparison_report)
+        comparison_df.to_csv('phase3/xai_waveform_attribution_system/04_results/cross_dataset_comparison.csv', index=False)
+        print("\nComparison report saved to: cross_dataset_comparison.csv")
     
     print("\n" + "="*80)
-    print("[VERDICT]")
+    print("ANALYSIS COMPLETE")
     print("="*80)
-    
-    if h3_summary is not None and ch_summary is not None:
-        # Criteria for "gold"
-        score = 0
-        max_score = 5
-        
-        # 1. Large sample size (statistical rigor)
-        if len(h3_summary) >= 150 and len(ch_summary) >= 100:  # 50 samples * 3-4 classes
-            print("  [+] Large sample size (n≥100 per dataset) - statistical rigor")
-            score += 1
-        else:
-            print(f"  [~] Sample size: HardOOD3={len(h3_summary)}, Chapman={len(ch_summary)}")
-            score += 0.5
-        
-        # 2. Adaptive segmentation works (P-wave improved)
-        if p_improved:
-            print(f"  [+] Adaptive segmentation works (Chapman P-wave: {ch_summary['P_wave_similarity'].mean():.3f})")
-            score += 1
-        else:
-            print(f"  [-] Adaptive segmentation insufficient (Chapman P-wave still {ch_summary['P_wave_similarity'].mean():.3f})")
-        
-        # 3. High QRS similarity (relaxed threshold)
-        if ch_summary['QRS_similarity'].mean() > 0.8:
-            print(f"  [+] High QRS similarity (Chapman: {ch_summary['QRS_similarity'].mean():.3f})")
-            score += 1
-        else:
-            print(f"  [~] Moderate QRS similarity (Chapman: {ch_summary['QRS_similarity'].mean():.3f})")
-            score += 0.5
-        
-        # 4. QRS is important segment
-        if ch_summary['QRS_importance'].mean() > h3_summary['QRS_importance'].mean():
-            print(f"  [+] QRS more important in real-world data (medical validity)")
-            score += 1
-        else:
-            print(f"  [~] QRS importance similar across datasets")
-            score += 0.5
-        
-        # 5. Visualizations + explanations
-        print("  [+] Visualizations + segment-wise explanations available")
-        score += 1
-        
-        print(f"\nFINAL SCORE: {score:.1f}/{max_score}")
-        
-        if score >= 4.5:
-            print("\nVERDICT: VANG THAT! (Real GOLD!) - 4.5+/5")
-            print("  - Large-scale validation")
-            print("  - Adaptive segmentation implemented")
-            print("  - Statistical rigor (n≥100)")
-            print("  - Medical validity confirmed")
-            print("  - Ready for CinC 2026!")
-        elif score >= 4:
-            print("\nVERDICT: DAY LA VANG! (This is GOLD!) - 4/5")
-            print("  - Good validation")
-            print("  - Improvements help")
-            print("  - Publishable at CinC/EMBC")
-        elif score >= 3:
-            print("\nVERDICT: Gan vang roi (Almost gold) - 3/5")
-            print("  - Good approach but needs refinement")
-        else:
-            print("\nVERDICT: Chua phai vang (Not gold yet)")
-            print("  - Approach has issues")
-    
-    print("\n" + "="*80)
-
 
 if __name__ == "__main__":
     main()
-
