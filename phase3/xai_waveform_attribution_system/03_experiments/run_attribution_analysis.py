@@ -121,27 +121,26 @@ def analyze_dataset(dataset_name: str, proto_csv: str, csv_root: str,
             
             results.append(sample_results)
             
-            # Visualize comparison for first 5 samples only (to save time)
-            if i < 5:
-                best_label = max(sample_results['comparisons'].keys(), 
-                               key=lambda l: sample_results['comparisons'][l]['similarity']['Overall'])
-                
-                best_comparison = sample_results['comparisons'][best_label]
-                
-                viz_path = output_path / f"{dataset_name}_{eval_file.stem}_vs_proto{best_label}.png"
-                
-                visualizer.plot_comparison(
-                    unknown_beat,
-                    proto_templates[best_label],
-                    best_comparison['similarity'],
-                    best_comparison['importance'],
-                    best_comparison['segments'],
-                    save_path=str(viz_path),
-                    title=f"{dataset_name} - {eval_file.stem} vs Prototype Class {best_label} (HR={heart_rate:.0f})"
-                )
-                
-                if i < 3:
-                    print(f"    Saved visualization: {viz_path.name}")
+            # Generate PNG visualization for ALL samples
+            best_label = max(sample_results['comparisons'].keys(), 
+                           key=lambda l: sample_results['comparisons'][l]['similarity']['Overall'])
+            
+            best_comparison = sample_results['comparisons'][best_label]
+            
+            viz_path = output_path / f"{dataset_name}_{eval_file.stem}_vs_proto{best_label}.png"
+            
+            visualizer.plot_comparison(
+                unknown_beat,
+                proto_templates[best_label],
+                best_comparison['similarity'],
+                best_comparison['importance'],
+                best_comparison['segments'],
+                save_path=str(viz_path),
+                title=f"{dataset_name} - {eval_file.stem} vs Prototype Class {best_label} (HR={heart_rate:.0f})"
+            )
+            
+            if i < 3:
+                print(f"    Saved visualization: {viz_path.name}")
             
         except Exception as e:
             print(f"    ERROR: {e}")
@@ -206,7 +205,7 @@ def main():
     print("\n[DATASET 1] HardOOD3")
     hardood3_proto = "artifacts/phase3/dual_memory/dual_memory_prototypes.csv"
     hardood3_csv = "Data/Generated_HardOOD3"
-    hardood3_out = "phase3/waveform_attribution/results_hardood3"
+    hardood3_out = "phase3/xai_waveform_attribution_system/04_results/hardood3"
     
     try:
         h3_summary = analyze_dataset("HardOOD3", hardood3_proto, hardood3_csv, 
@@ -219,7 +218,7 @@ def main():
     print("\n[DATASET 2] Chapman-Shaoxing")
     chapman_proto = "artifacts/phase3/chapman_experiment/dual_memory_prototypes.csv"
     chapman_csv = "Data/Generated_Chapman"
-    chapman_out = "phase3/waveform_attribution/results_chapman"
+    chapman_out = "phase3/xai_waveform_attribution_system/04_results/chapman"
     
     try:
         ch_summary = analyze_dataset("Chapman", chapman_proto, chapman_csv,
