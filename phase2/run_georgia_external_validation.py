@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -23,7 +23,7 @@ from phase2.ecg_mechanism_core import (
     map_y,
     select_threshold,
 )
-from real_ml_xai_llcs.features import build_feature_matrix, extract_ecg_features_from_frame
+from phase2.ecg_features import build_feature_matrix, extract_ecg_features_from_frame
 
 
 NORMAL_CODE = "426783006"  # Sinus rhythm / normal sinus rhythm in Challenge 2020 mappings.
@@ -219,7 +219,7 @@ def counterfactual_summary(
     threshold: float,
     groups: dict[str, list[int]],
 ) -> dict:
-    combo = ("st_segment", "shape_template")
+    combo = ("st_segment", "t_wave")
     x_z = scaler.transform(x_pos)
     norm_idx, _ = memory.nearest_by_label(x_z, 0)
     norm_proto = scaler.inverse_transform(memory.prototype_matrix_[norm_idx])  # type: ignore[index]

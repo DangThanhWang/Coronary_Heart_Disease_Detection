@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -24,10 +24,10 @@ from phase2.run_georgia_external_validation import (
     build_georgia_matrix,
     discover_georgia,
 )
-from real_ml_xai_llcs.features import build_feature_matrix
+from phase2.ecg_features import build_feature_matrix
 
 
-TARGET_COMBO = ("st_segment", "shape_template")
+TARGET_COMBO = ("st_segment", "t_wave")
 
 
 def combo_name(combo: tuple[str, ...]) -> str:

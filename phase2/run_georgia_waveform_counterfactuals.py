@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -28,7 +28,7 @@ from phase2.run_ptbxl_waveform_counterfactual import (
     apply_waveform_counterfactual,
     build_normal_template,
 )
-from real_ml_xai_llcs.features import build_feature_matrix, extract_ecg_features_from_frame
+from phase2.ecg_features import build_feature_matrix, extract_ecg_features_from_frame
 
 
 def read_georgia_frame(record_stem: Path, target_fs: float) -> pd.DataFrame:

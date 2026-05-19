@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -25,14 +25,14 @@ from phase2.ecg_mechanism_core import (
 )
 from phase2.prototype_memory import CounterfactualMemory
 from phase2.run_ptbxl_mechanism_analysis import load_diagnostic_codes, load_superclasses, load_task_samples
-from real_ml_xai_llcs.features import build_feature_matrix
+from phase2.ecg_features import build_feature_matrix
 
 
 DEFAULT_TARGET_COMBOS = {
-    "STTC": ("st_segment", "shape_template"),
-    "CD": ("shape_template", "qrs"),
-    "MI": ("st_segment", "shape_template"),
-    "HYP": ("shape_template", "global_morph"),
+    "STTC": ("st_segment", "t_wave"),
+    "CD": ("qrs", "global_morph"),
+    "MI": ("st_segment", "t_wave"),
+    "HYP": ("global_morph", "qrs"),
 }
 
 
@@ -418,7 +418,7 @@ def main() -> None:
         "--target-combo",
         type=str,
         default=None,
-        help="Optional clinical group combo override, e.g. st_segment+shape_template.",
+        help="Optional clinical group combo override, e.g. st_segment+t_wave.",
     )
     parser.add_argument(
         "--mi-cohort",

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import importlib.util
@@ -21,7 +21,7 @@ from phase2.ecg_mechanism_core import (
 )
 from phase2.prototype_memory import CounterfactualMemory
 from phase2.run_ptbxl_main_experiment import group_permutation
-from real_ml_xai_llcs.features import build_feature_matrix
+from phase2.ecg_features import build_feature_matrix
 
 
 EXPECTED_STTC_GROUPS = {"st_segment", "shape_template", "t_wave"}

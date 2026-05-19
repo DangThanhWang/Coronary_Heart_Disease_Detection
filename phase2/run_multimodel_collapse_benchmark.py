@@ -22,7 +22,7 @@ from phase2.ecg_mechanism_core import (
 )
 from phase2.prototype_memory import CounterfactualMemory
 from phase2.run_georgia_external_validation import build_georgia_matrix, discover_georgia
-from real_ml_xai_llcs.features import build_feature_matrix
+from phase2.ecg_features import build_feature_matrix
 
 
 TARGET = ("st_segment", "shape_template")

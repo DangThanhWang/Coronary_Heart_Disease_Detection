@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import ast
@@ -20,7 +20,7 @@ from phase2.ecg_mechanism_core import (
     select_threshold,
 )
 from phase2.prototype_memory import CounterfactualMemory
-from real_ml_xai_llcs.features import Sample, build_feature_matrix, iter_csv_samples, iter_train_env_samples
+from phase2.ecg_features import Sample, build_feature_matrix, iter_csv_samples, iter_train_env_samples
 
 
 ECG_ID_RE = re.compile(r"ptbxl_(\d{5})_")

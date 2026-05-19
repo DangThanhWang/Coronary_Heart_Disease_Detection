@@ -8,17 +8,17 @@ import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import average_precision_score, balanced_accuracy_score, confusion_matrix, f1_score, roc_auc_score
 
-from real_ml_xai_llcs.features import Sample, iter_csv_samples, iter_train_env_samples
+from phase2.ecg_features import Sample, iter_csv_samples, iter_train_env_samples
 
 
 BASE_GROUP_ORDER = [
     "st_segment",
-    "shape_template",
     "t_wave",
+    "qrs",
     "global_morph",
     "p_wave",
     "pr_segment",
-    "qrs",
+    "beat_baseline",
     "rhythm",
 ]
 
@@ -132,8 +132,54 @@ def paired_cohen_d(diff: np.ndarray) -> float:
     return float(np.mean(diff) / max(np.std(diff, ddof=1), 1e-12))
 
 
+_SHAPE_IDX_RE = re.compile(r"_shape_(\d+)$")
+
+# Default ECG window parameters — must match feature extraction defaults (pre=80, post=120, fs=100, downsample=32).
+_DEFAULT_PRE: int = 80
+_DEFAULT_POST: int = 120
+_DEFAULT_FS: float = 100.0
+_DEFAULT_N_SHAPE: int = 32
+
+
+def _build_shape_region_map(
+    pre: int = _DEFAULT_PRE,
+    post: int = _DEFAULT_POST,
+    fs: float = _DEFAULT_FS,
+    n_shape: int = _DEFAULT_N_SHAPE,
+) -> dict[int, str]:
+    """Map each downsampled beat index to its physiological region.
+
+    Boundaries (samples, 0-indexed in the pre+post window):
+        P wave  : [pre - 0.22*fs,  pre - 0.08*fs)
+        QRS+PR  : [pre - 0.08*fs,  pre + 0.10*fs)   (absorbs the short PR isoelectric gap)
+        ST      : [pre + 0.10*fs,  pre + 0.32*fs)
+        T wave  : [pre + 0.32*fs,  pre + 0.72*fs)
+        baseline: everything else (pre-P and post-T)
+    """
+    total = pre + post
+    p_start = pre - int(0.22 * fs)
+    p_end = pre - int(0.08 * fs)
+    st_start = pre + int(0.10 * fs)
+    t_start = pre + int(0.32 * fs)
+    t_end = pre + int(0.72 * fs)
+    out: dict[int, str] = {}
+    for idx in range(n_shape):
+        pos = idx * (total - 1) / max(n_shape - 1, 1)
+        if p_start <= pos < p_end:
+            out[idx] = "p_wave"
+        elif p_end <= pos < st_start:  # PR gap + QRS depolarisation
+            out[idx] = "qrs"
+        elif st_start <= pos < t_start:
+            out[idx] = "st_segment"
+        elif t_start <= pos < t_end:
+            out[idx] = "t_wave"
+        else:
+            out[idx] = "beat_baseline"
+    return out
+
+
 def feature_groups(feature_names: Sequence[str]) -> dict[str, list[int]]:
-    groups = {
+    groups: dict[str, list[int]] = {
         "rhythm": [],
         "p_wave": [],
         "pr_segment": [],
@@ -141,25 +187,35 @@ def feature_groups(feature_names: Sequence[str]) -> dict[str, list[int]]:
         "st_segment": [],
         "t_wave": [],
         "global_morph": [],
-        "shape_template": [],
+        "beat_baseline": [],
     }
-    for i, name in enumerate(feature_names):
-        if name in {"n_peaks", "fs", "rr_mean", "rr_std", "rr_cv", "heart_rate"}:
-            groups["rhythm"].append(i)
+    # Detect n_shape from feature names so the region map stays consistent with
+    # whatever downsample factor was used during feature extraction.
+    shape_idxs = [int(m.group(1)) for name in feature_names if (m := _SHAPE_IDX_RE.search(name))]
+    n_shape = max(shape_idxs) + 1 if shape_idxs else _DEFAULT_N_SHAPE
+    shape_region = _build_shape_region_map(n_shape=n_shape)
+
+    for col_i, name in enumerate(feature_names):
+        m = _SHAPE_IDX_RE.search(name)
+        if m is not None:
+            # Merge downsampled beat point into its physiological region group.
+            groups[shape_region[int(m.group(1))]].append(col_i)
+        elif name in {"n_peaks", "fs", "rr_mean", "rr_std", "rr_cv", "heart_rate"}:
+            groups["rhythm"].append(col_i)
         elif "_p_" in name:
-            groups["p_wave"].append(i)
+            groups["p_wave"].append(col_i)
         elif "_pr_" in name:
-            groups["pr_segment"].append(i)
+            groups["pr_segment"].append(col_i)
         elif "_qrs_" in name:
-            groups["qrs"].append(i)
+            groups["qrs"].append(col_i)
         elif "_st_" in name:
-            groups["st_segment"].append(i)
+            groups["st_segment"].append(col_i)
         elif "_t_" in name:
-            groups["t_wave"].append(i)
+            groups["t_wave"].append(col_i)
         elif any(name.endswith(s) for s in ("_mean", "_std", "_min", "_max")):
-            groups["global_morph"].append(i)
+            groups["global_morph"].append(col_i)
         else:
-            groups["shape_template"].append(i)
+            groups["beat_baseline"].append(col_i)
     return {k: v for k, v in groups.items() if v}
 
 
@@ -184,9 +240,7 @@ def augment_feature_groups_with_regions(
         if "_st_" in name:
             base_group = "st_segment"
         else:
-            base_group = "shape_template"
-        if base_group not in {"st_segment", "shape_template"}:
-            continue
+            continue  # shape points are already merged into clinical groups
         for region_name, region_leads in regions.items():
             if lead not in region_leads:
                 continue
