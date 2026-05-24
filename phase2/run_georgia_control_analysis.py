@@ -103,7 +103,7 @@ def summarize_combo(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Georgia external counterfactual controls and CCS.")
+    parser = argparse.ArgumentParser(description="Run the Georgia feature-level counterfactual controls.")
     parser.add_argument("--ptbxl-root", type=Path, default=Path("Data") / "Generated_PTBXL_12Lead")
     parser.add_argument("--georgia-root", type=Path, default=Path("Data") / "PhysioNet_Challenge_2020_Georgia")
     parser.add_argument(
@@ -176,10 +176,10 @@ def main() -> None:
     for alpha in [0.0, 0.25, 0.5, 0.75, 1.0]:
         alpha_rows.append(summarize_combo(model, x_geo, norm_proto, threshold, group_cols, TARGET_COMBO, alpha=alpha))
     alpha_df = pd.DataFrame(alpha_rows)
-    alpha_df.to_csv(args.out_dir / "georgia_st_shape_alpha_sweep.csv", index=False)
+    alpha_df.to_csv(args.out_dir / "georgia_target_alpha_sweep.csv", index=False)
 
     report = {
-        "method": "Georgia external counterfactual controls",
+        "method": "Georgia feature-level counterfactual controls",
         "data": {
             "georgia_positive_n": int(len(y_geo)),
             "failures": geo_fail[:20],
@@ -189,8 +189,8 @@ def main() -> None:
             "ptbxl_val_failures": val_fail[:10],
         },
         "target": target_summary,
-        "best_non_st_shape_control": controls_df.iloc[0].to_dict(),
-        "georgia_counterfactual_consistency_score": {
+        "best_control": controls_df.iloc[0].to_dict(),
+        "target_vs_best_control": {
             "mean_prob_drop_difference": bootstrap_mean_ci(diff, args.n_boot, args.seed),
             "flip_rate_difference": bootstrap_mean_ci(flip_diff, args.n_boot, args.seed),
             "paired_cohen_d_prob_drop": paired_cohen_d(diff),
@@ -204,7 +204,7 @@ def main() -> None:
         },
         "files": {
             "controls": str(args.out_dir / "georgia_negative_control_summary.csv"),
-            "alpha_sweep": str(args.out_dir / "georgia_st_shape_alpha_sweep.csv"),
+            "alpha_sweep": str(args.out_dir / "georgia_target_alpha_sweep.csv"),
         },
     }
     (args.out_dir / "georgia_counterfactual_controls_report.json").write_text(
@@ -215,5 +215,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 

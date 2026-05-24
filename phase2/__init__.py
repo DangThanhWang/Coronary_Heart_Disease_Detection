@@ -1,1 +1,1 @@
-"""Phase 2 focused ECG mechanism-validation module."""
+"""Phase 2 ECG analysis."""

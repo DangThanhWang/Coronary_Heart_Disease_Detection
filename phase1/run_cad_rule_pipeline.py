@@ -27,7 +27,7 @@ from phase1.cad_rule_pipeline import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Phase 1: leakage-free CAD protective rule-XAI on tabular CAD datasets."
+        description="Run the Phase 1 rule-based CAD analysis on tabular datasets."
     )
     parser.add_argument("--out-dir", type=Path, default=Path("artifacts") / "phase1")
     parser.add_argument("--cache-dir", type=Path, default=Path("Data") / "phase1_cache")

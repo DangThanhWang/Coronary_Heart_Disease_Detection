@@ -1,38 +1,28 @@
-# Phase 2 ECG Mechanism Validation
+# Phase 2 ECG Analysis
 
-Focused thesis module for the ECG part of the project.
+This README covers the tracked Phase 2 files in `phase2/`.
 
-## Single Claim
+The current workflow centers on the PTB-XL `NORM vs STTC` task and the external
+Georgia check.
 
-The Phase 2 claim is deliberately narrow: a simple counterfactual-memory ECG
-pipeline identifies a testable ST/T mechanism for the PTB-XL `NORM vs STTC`
-task, and the same mechanism remains directionally consistent on external
-Georgia data.
-
-This is an XAI/mechanism-validation study. It is not a classifier ranking,
-clinical deployment claim, new physiology claim, or general ECG diagnosis
-claim.
-
-## Main Code
-
-The active Phase 2 path is limited to these modules:
+## Files
 
 | File | Role |
 |---|---|
 | `ecg_features.py` | ECG loading and feature extraction |
-| `ecg_mechanism_core.py` | Shared grouping, model, metric, and counterfactual helpers |
-| `prototype_memory.py` | Counterfactual prototype memory |
+| `ecg_mechanism_core.py` | shared grouping, model, metric, and counterfactual helpers |
+| `prototype_memory.py` | prototype memory used by the counterfactual analyses |
 | `prepare_ptbxl_multilead_data.py` | PTB-XL 12-lead CSV preparation |
-| `download_georgia_dataset.py` | Georgia dataset download/resume helper |
-| `run_ptbxl_main_experiment.py` | PTB-XL `NORM vs STTC` classification and feature-level counterfactuals |
-| `run_georgia_external_validation.py` | External Georgia classification check |
-| `run_georgia_control_analysis.py` | Full Georgia feature-level ST/T counterfactual controls |
-| `run_ptbxl_waveform_counterfactual.py` | PTB-XL waveform-level ST/T intervention |
-| `run_georgia_waveform_counterfactuals.py` | Georgia waveform-level ST/T intervention |
+| `download_georgia_dataset.py` | Georgia dataset download and resume helper |
+| `run_ptbxl_main_experiment.py` | PTB-XL classification, feature-level controls, and reports |
+| `run_georgia_external_validation.py` | Georgia external validation with the PTB-XL model |
+| `run_georgia_control_analysis.py` | Georgia feature-level counterfactual controls |
+| `run_ptbxl_waveform_counterfactual.py` | PTB-XL waveform counterfactual analysis |
+| `run_georgia_waveform_counterfactuals.py` | Georgia waveform counterfactual analysis |
 
-## Main Runs
+## Runs
 
-PTB-XL internal benchmark and feature-level counterfactual proof:
+PTB-XL main experiment:
 
 ```powershell
 python -m phase2.run_ptbxl_main_experiment `
@@ -44,7 +34,7 @@ python -m phase2.run_ptbxl_main_experiment `
   --n-cases 10
 ```
 
-External Georgia validation, strict normal negatives:
+Georgia external validation with strict-normal negatives:
 
 ```powershell
 python -m phase2.run_georgia_external_validation `
@@ -56,7 +46,7 @@ python -m phase2.run_georgia_external_validation `
   --target-fs 100
 ```
 
-External Georgia validation, hard negatives:
+Georgia external validation with `no_st_t` negatives:
 
 ```powershell
 python -m phase2.run_georgia_external_validation `
@@ -68,7 +58,7 @@ python -m phase2.run_georgia_external_validation `
   --target-fs 100
 ```
 
-Full Georgia feature-level ST/T control analysis:
+Georgia feature-level controls:
 
 ```powershell
 python -m phase2.run_georgia_control_analysis `
@@ -79,7 +69,7 @@ python -m phase2.run_georgia_control_analysis `
   --n-boot 1000
 ```
 
-PTB-XL waveform-level ST/T counterfactual:
+PTB-XL waveform analysis:
 
 ```powershell
 python -m phase2.run_ptbxl_waveform_counterfactual `
@@ -88,7 +78,7 @@ python -m phase2.run_ptbxl_waveform_counterfactual `
   --n-boot 1000
 ```
 
-External Georgia waveform-level ST/T counterfactual:
+Georgia waveform analysis:
 
 ```powershell
 python -m phase2.run_georgia_waveform_counterfactuals `
@@ -98,39 +88,12 @@ python -m phase2.run_georgia_waveform_counterfactuals `
   --n-boot 1000
 ```
 
-## Main Artifacts
+## Key Outputs
 
-| Artifact directory | Keep because |
-|---|---|
-| `artifacts/phase2/ptbxl_final` | PTB-XL internal classification and `st_segment+t_wave` feature-level counterfactual |
-| `artifacts/phase2/external_georgia_full_strict_normal` | Georgia strict-normal external classification |
-| `artifacts/phase2/external_georgia_full_no_st_t` | Georgia hard-negative external classification |
-| `artifacts/phase2/georgia_counterfactual_controls` | Full Georgia `st_segment+t_wave` feature-level controls |
-| `artifacts/phase2/waveform_counterfactual_sttc` | PTB-XL waveform ST/T target, controls, and dose response |
-| `artifacts/phase2/georgia_waveform_counterfactual_sttc_full` | Georgia waveform ST/T target, controls, and dose response |
-
-## Result Snapshot
-
-The values below match the focused `st_segment+t_wave` thesis interpretation.
-
-| Layer | PTB-XL | Georgia |
-|---|---:|---:|
-| Classification AUC | 0.9628 | 0.9088 strict-normal / 0.8228 hard-negative |
-| Feature-level ST/T target drop | 0.5240 | 0.5034 |
-| Feature-level CCS | 0.3840 | 0.4100 |
-| Waveform ST/T target drop | 0.5817 | 0.6032 |
-| Waveform pre-QRS control drop | -0.0838 | -0.0601 |
-
-## Archived
-
-Everything outside the focused path is archived:
-
-- exploratory `shape_template` summaries and figures
-- XAI baseline side branches
-- PTB-XL mechanism-map and non-STTC disease probes
-- collapse, spatial, deployable, breakthrough, shortcut, MI, and subgroup trials
-- MIMIC bootstrap utility
-- stale final-asset builders and focused-claim summaries
-
-Code archives live in `phase2/archive_experiments/`.
-Artifact archives live in `artifacts/phase2/archive/`.
+- `artifacts/phase2/ptbxl_final/ptbxl_final_report.json`
+- `artifacts/phase2/ptbxl_final/negative_control_summary.csv`
+- `artifacts/phase2/external_georgia_full_strict_normal/georgia_validation_report.json`
+- `artifacts/phase2/external_georgia_full_no_st_t/georgia_validation_report.json`
+- `artifacts/phase2/georgia_counterfactual_controls/georgia_counterfactual_controls_report.json`
+- `artifacts/phase2/waveform_counterfactual_sttc/waveform_counterfactual_report.json`
+- `artifacts/phase2/georgia_waveform_counterfactual_sttc_full/georgia_waveform_counterfactual_report.json`

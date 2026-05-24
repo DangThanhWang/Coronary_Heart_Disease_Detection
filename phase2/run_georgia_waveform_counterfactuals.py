@@ -144,7 +144,7 @@ def summarize_rows(df: pd.DataFrame, n_boot: int, seed: int) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="External Georgia waveform-level ST/T counterfactual validation.")
+    parser = argparse.ArgumentParser(description="Run the Georgia waveform counterfactual analysis.")
     parser.add_argument("--ptbxl-root", type=Path, default=Path("Data") / "Generated_PTBXL_12Lead")
     parser.add_argument("--georgia-root", type=Path, default=Path("Data") / "PhysioNet_Challenge_2020_Georgia")
     parser.add_argument(
@@ -228,7 +228,7 @@ def main() -> None:
     alpha_st_t = summary_df[summary_df["window"] == "st_t"].sort_values("alpha")
 
     report = {
-        "method": "External Georgia waveform-level ST/T counterfactual validation",
+        "method": "Georgia waveform ST/T counterfactual",
         "data": {
             "candidate_positive_n": int(len(rows)),
             "usable_positive_n": int(len(ok_rows)),
@@ -255,16 +255,12 @@ def main() -> None:
         "ranked_alpha1": summary_df[summary_df["alpha"] == 1.0]
         .sort_values("mean_prob_drop", ascending=False)
         .to_dict(orient="records"),
-        "verdict": {
-            "keep_in_main_results": bool(
-                target["mean_prob_drop"] > 0.30
-                and (target["mean_prob_drop"] - best_control["mean_prob_drop"]) > 0.15
-                and target["positive_drop_rate"] > 0.80
+        "selection_checks": {
+            "target_drop_gt_0_30": bool(target["mean_prob_drop"] > 0.30),
+            "target_minus_control_gt_0_15": bool(
+                (target["mean_prob_drop"] - best_control["mean_prob_drop"]) > 0.15
             ),
-            "plain_language": (
-                "Keep if external Georgia ST/T waveform edits show a large, monotone drop and beat waveform controls. "
-                "Treat as mechanism validation, not Georgia deployment performance."
-            ),
+            "positive_drop_rate_gt_0_80": bool(target["positive_drop_rate"] > 0.80),
         },
         "outputs": {
             "summary": str(args.out_dir / "georgia_waveform_counterfactual_summary.csv"),
@@ -274,10 +270,9 @@ def main() -> None:
     }
     with (args.out_dir / "georgia_waveform_counterfactual_report.json").open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
-    print(json.dumps(report["verdict"], indent=2))
+    print(json.dumps(report["selection_checks"], indent=2))
 
 
 if __name__ == "__main__":
     main()
-
 

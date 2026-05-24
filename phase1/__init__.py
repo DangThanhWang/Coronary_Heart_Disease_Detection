@@ -1,4 +1,4 @@
-﻿"""Phase 1 CAD tabular rule-XAI module."""
+"""Phase 1 tabular CAD analysis."""
 
 from phase1.cad_tabular_config import BIN_UCI, BIN_Z, CLEVELAND_URL, HUNGARIAN_URL, BinSpec, RuleParams
 from phase1.cad_tabular_data import load_uci_heart, load_z_alizadeh, load_z_alizadeh_from_uci
@@ -18,4 +18,3 @@ __all__ = [
     "save_dataset_result",
     "summary_row",
 ]
-

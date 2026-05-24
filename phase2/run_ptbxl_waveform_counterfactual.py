@@ -201,7 +201,7 @@ def summarize_rows(df: pd.DataFrame, n_boot: int, seed: int) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Run the PTB-XL waveform counterfactual analysis.")
     parser.add_argument("--csv-root", type=Path, default=Path("Data/Generated_PTBXL_12Lead"))
     parser.add_argument("--out-dir", type=Path, default=Path("artifacts/phase2/waveform_counterfactual_sttc"))
     parser.add_argument("--pre", type=int, default=80)
@@ -278,7 +278,7 @@ def main() -> None:
     target_minus_control = float(target["mean_prob_drop"] - best_control["mean_prob_drop"])
 
     report = {
-        "method": "Waveform-level counterfactual ST/T editing",
+        "method": "PTB-XL waveform ST/T counterfactual",
         "task": "PTB-XL 12-lead NORM vs STTC",
         "data": {
             "train_n": int(len(y_train)),
@@ -293,16 +293,10 @@ def main() -> None:
         "best_control_alpha1": best_control,
         "target_minus_best_control_mean_drop": target_minus_control,
         "ranked_alpha1": alpha1.to_dict(orient="records"),
-        "verdict": {
-            "keep_in_main_results": bool(
-                target["mean_prob_drop"] > 0.30
-                and target_minus_control > 0.15
-                and target["positive_drop_rate"] > 0.85
-            ),
-            "plain_language": (
-                "Keep if ST/T waveform edits create a large probability drop and beat pre-QRS/QRS controls. "
-                "Drop if the control windows are comparable or the target drop is weak."
-            ),
+        "selection_checks": {
+            "target_drop_gt_0_30": bool(target["mean_prob_drop"] > 0.30),
+            "target_minus_control_gt_0_15": bool(target_minus_control > 0.15),
+            "positive_drop_rate_gt_0_85": bool(target["positive_drop_rate"] > 0.85),
         },
         "outputs": {
             "summary": str(args.out_dir / "waveform_counterfactual_summary.csv"),
@@ -312,10 +306,9 @@ def main() -> None:
     }
     with (args.out_dir / "waveform_counterfactual_report.json").open("w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
-    print(json.dumps(report["verdict"], indent=2))
+    print(json.dumps(report["selection_checks"], indent=2))
 
 
 if __name__ == "__main__":
     main()
-
 

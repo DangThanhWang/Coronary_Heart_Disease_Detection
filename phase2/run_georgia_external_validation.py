@@ -250,7 +250,7 @@ def label_counts(rows: list[tuple[Path, int, list[str]]]) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="External Georgia ST/T validation for PTB-XL clinical counterfactual memory.")
+    parser = argparse.ArgumentParser(description="Evaluate the PTB-XL ST/T model on Georgia ECG records.")
     parser.add_argument("--ptbxl-root", type=Path, default=Path("Data") / "Generated_PTBXL_12Lead")
     parser.add_argument("--georgia-root", type=Path, default=Path("Data") / "PhysioNet_Challenge_2020_Georgia")
     parser.add_argument(
@@ -327,11 +327,11 @@ def main() -> None:
     pred_df.to_csv(args.out_dir / "georgia_predictions.csv", index=False)
 
     report = {
-        "method": "External Georgia ST/T validation",
-        "interpretation_limits": [
-            "Partial Georgia download; results are provisional until all g1-g11 records are present.",
-            "Georgia labels are multi-label SNOMED findings, not the same PTB-XL superclass ontology.",
-            "Positive class is ST/T-related SNOMED finding; negative class uses the selected policy.",
+        "method": "Georgia external validation",
+        "dataset_notes": [
+            "Georgia labels are read from SNOMED codes in the record headers.",
+            "The negative class follows the selected negative-policy setting.",
+            "Record counts depend on the files available under georgia_root.",
         ],
         "label_mapping": {
             "positive_codes": {code: CODE_NAMES.get(code, code) for code in sorted(ST_T_CODES)},
@@ -381,5 +381,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 

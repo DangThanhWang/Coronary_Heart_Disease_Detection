@@ -54,7 +54,7 @@ def load_archived_task_helpers():
         )
     except ModuleNotFoundError as exc:
         raise RuntimeError(
-            "Non-STTC target helpers are archived. The focused Phase 2 thesis path uses --target STTC."
+            "Helpers for non-STTC targets are not included in the tracked Phase 2 module. Use --target STTC here."
         ) from exc
     return load_diagnostic_codes, load_superclasses, load_task_samples
 
@@ -410,7 +410,7 @@ def export_case_studies(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Final clean PTB-XL pipeline for Clinical Counterfactual Memory.")
+    parser = argparse.ArgumentParser(description="Run the PTB-XL feature-level counterfactual experiment.")
     parser.add_argument("--csv-root", type=Path, default=Path("Data") / "Generated_PTBXL_12Lead")
     parser.add_argument(
         "--ptbxl-root",
@@ -599,7 +599,6 @@ def main() -> None:
     report = {
         "method": "Clinical Counterfactual Memory",
         "task": f"PTB-XL 12-lead NORM vs {args.target}",
-        "scope_note": "Final PTB-XL internal benchmark; do not generalize without external validation.",
         "data": {
             "csv_root": str(args.csv_root),
             "ptbxl_root": str(args.ptbxl_root),
@@ -625,8 +624,7 @@ def main() -> None:
             "target_combo": target_combo_name,
             "validation_target_combo_ranking": val_target_ranking.head(10).to_dict(orient="records") if not val_target_ranking.empty else [],
             "target_summary": target_summary,
-            "best_non_target_control": controls.iloc[0].to_dict(),
-            "best_non_st_shape_control": controls.iloc[0].to_dict(),
+            "best_control": controls.iloc[0].to_dict(),
             "target_minus_best_control": {
                 "best_control_combo": best_control_name,
                 "mean_prob_drop_difference": bootstrap_mean_ci(diff_drop, args.n_boot, args.seed),
@@ -635,13 +633,10 @@ def main() -> None:
             },
             "target_alpha_monotone_mean_drop": bool(np.all(np.diff(target_alpha["mean_prob_drop"].to_numpy()) >= -1e-9)),
             "target_alpha_monotone_flip_rate": bool(np.all(np.diff(target_alpha["flip_rate"].to_numpy()) >= -1e-9)),
-            "st_shape_alpha_monotone_mean_drop": bool(np.all(np.diff(target_alpha["mean_prob_drop"].to_numpy()) >= -1e-9)),
-            "st_shape_alpha_monotone_flip_rate": bool(np.all(np.diff(target_alpha["flip_rate"].to_numpy()) >= -1e-9)),
         },
         "xai_controls": {
             "top_permutation_combo": permutation_df.iloc[0].to_dict(),
             "drop_target_retrain": ablation_df[ablation_df["dropped"] == target_combo_name].iloc[0].to_dict(),
-            "drop_st_shape_retrain": ablation_df[ablation_df["dropped"] == target_combo_name].iloc[0].to_dict(),
         },
         "robustness": {
             "leave_env_out_mean_auc": float(env_df["auc"].mean()),
@@ -671,4 +666,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
