@@ -1,14 +1,38 @@
 # Phase 2 ECG Mechanism Validation
 
-Focused thesis module.
+Focused thesis module for the ECG part of the project.
 
 ## Single Claim
 
-Simple clinical counterfactual memory identifies an ST/T mechanism for ST/T abnormality that is strong on PTB-XL and remains consistent on external Georgia data. The strongest evidence is direct waveform-level ST/T counterfactual editing with negative controls and dose-response behavior. This is an XAI/mechanism-validation study, not a classification ranking or deployment statement.
+The Phase 2 claim is deliberately narrow: a simple counterfactual-memory ECG
+pipeline identifies a testable ST/T mechanism for the PTB-XL `NORM vs STTC`
+task, and the same mechanism remains directionally consistent on external
+Georgia data.
+
+This is an XAI/mechanism-validation study. It is not a classifier ranking,
+clinical deployment claim, new physiology claim, or general ECG diagnosis
+claim.
+
+## Main Code
+
+The active Phase 2 path is limited to these modules:
+
+| File | Role |
+|---|---|
+| `ecg_features.py` | ECG loading and feature extraction |
+| `ecg_mechanism_core.py` | Shared grouping, model, metric, and counterfactual helpers |
+| `prototype_memory.py` | Counterfactual prototype memory |
+| `prepare_ptbxl_multilead_data.py` | PTB-XL 12-lead CSV preparation |
+| `download_georgia_dataset.py` | Georgia dataset download/resume helper |
+| `run_ptbxl_main_experiment.py` | PTB-XL `NORM vs STTC` classification and feature-level counterfactuals |
+| `run_georgia_external_validation.py` | External Georgia classification check |
+| `run_georgia_control_analysis.py` | Full Georgia feature-level ST/T counterfactual controls |
+| `run_ptbxl_waveform_counterfactual.py` | PTB-XL waveform-level ST/T intervention |
+| `run_georgia_waveform_counterfactuals.py` | Georgia waveform-level ST/T intervention |
 
 ## Main Runs
 
-PTB-XL internal benchmark and counterfactual proof:
+PTB-XL internal benchmark and feature-level counterfactual proof:
 
 ```powershell
 python -m phase2.run_ptbxl_main_experiment `
@@ -44,66 +68,7 @@ python -m phase2.run_georgia_external_validation `
   --target-fs 100
 ```
 
-Supportive PTB-XL disease mechanism map:
-
-```powershell
-python -m phase2.run_ptbxl_mechanism_analysis `
-  --csv-root Data\Generated_PTBXL_12Lead `
-  --out-dir artifacts\phase2\ptbxl_mechanism_map `
-  --permutation-repeats 4 `
-  --prototypes-per-class 12
-```
-
-Focused result summary: Counterfactual Consistency Score, external consistency,
-and clinical alignment score.
-
-```powershell
-python -m phase2.summarize_phase2_results `
-  --out-dir artifacts\phase2\focused_result_summary
-```
-
-Final tables and figures:
-
-```powershell
-python -m phase2.build_final_assets `
-  --out-dir artifacts\phase2\final_assets
-```
-
-Official-XAI-style baselines for PTB-XL STTC. This compares ExtraTrees
-classification, feature importance, group permutation, TreeSHAP when installed,
-and prototype-memory-only scoring against the counterfactual-memory result:
-
-```powershell
-python -m phase2.run_xai_baseline_analysis `
-  --out-dir artifacts\phase2\xai_baselines_sttc `
-  --permutation-repeats 4 `
-  --shap-samples 80
-```
-
-Waveform-level PTB-XL counterfactual. This directly edits ST/T samples in the
-ECG waveform toward a normal template, then re-extracts features and compares
-the probability drop against pre-QRS/P-PR/QRS waveform controls:
-
-```powershell
-python -m phase2.run_ptbxl_waveform_counterfactual `
-  --out-dir artifacts\phase2\waveform_counterfactual_sttc `
-  --template-max-records 800 `
-  --n-boot 1000
-```
-
-External Georgia waveform-level counterfactual. This applies the same PTB-XL
-model and normal waveform template to all Georgia ST/T-positive ECGs:
-
-```powershell
-python -m phase2.run_georgia_waveform_counterfactuals `
-  --out-dir artifacts\phase2\georgia_waveform_counterfactual_sttc_full `
-  --max-positive 0 `
-  --template-max-records 800 `
-  --n-boot 1000
-```
-
-Optional external CCS control run. This is slower because it extracts all Georgia
-ST/T-positive records and compares ST+shape against non-ST/shape controls:
+Full Georgia feature-level ST/T control analysis:
 
 ```powershell
 python -m phase2.run_georgia_control_analysis `
@@ -114,44 +79,58 @@ python -m phase2.run_georgia_control_analysis `
   --n-boot 1000
 ```
 
-Keep the main Phase 2 path limited to the runs above.
-
-## Data Utilities
-
-Create 12-lead PTB-XL CSVs from the existing generated split:
+PTB-XL waveform-level ST/T counterfactual:
 
 ```powershell
-python -m phase2.prepare_ptbxl_multilead_data `
-  --out-root Data\Generated_PTBXL_12Lead
+python -m phase2.run_ptbxl_waveform_counterfactual `
+  --out-dir artifacts\phase2\waveform_counterfactual_sttc `
+  --template-max-records 800 `
+  --n-boot 1000
 ```
 
-Download or resume Georgia:
+External Georgia waveform-level ST/T counterfactual:
 
 ```powershell
-python -m phase2.download_georgia_dataset `
-  --out-root Data\PhysioNet_Challenge_2020_Georgia `
-  --workers 4 `
-  --timeout 120 `
-  --retries 5
+python -m phase2.run_georgia_waveform_counterfactuals `
+  --out-dir artifacts\phase2\georgia_waveform_counterfactual_sttc_full `
+  --max-positive 0 `
+  --template-max-records 800 `
+  --n-boot 1000
 ```
 
-Bootstrap a tiny MIMIC-IV-ECG sample and verify local WFDB loading:
+## Main Artifacts
 
-```powershell
-python -m phase2.download_mimic_ecg_sample `
-  --out-root Data\MIMIC_IV_ECG_bootstrap `
-  --n-records 3 `
-  --preview-rows 10
-```
+| Artifact directory | Keep because |
+|---|---|
+| `artifacts/phase2/ptbxl_final` | PTB-XL internal classification and `st_segment+t_wave` feature-level counterfactual |
+| `artifacts/phase2/external_georgia_full_strict_normal` | Georgia strict-normal external classification |
+| `artifacts/phase2/external_georgia_full_no_st_t` | Georgia hard-negative external classification |
+| `artifacts/phase2/georgia_counterfactual_controls` | Full Georgia `st_segment+t_wave` feature-level controls |
+| `artifacts/phase2/waveform_counterfactual_sttc` | PTB-XL waveform ST/T target, controls, and dose response |
+| `artifacts/phase2/georgia_waveform_counterfactual_sttc_full` | Georgia waveform ST/T target, controls, and dose response |
 
-## What Is Archived
+## Result Snapshot
 
-The following are intentionally out of the main path and live under `archive_experiments/`:
+The values below match the focused `st_segment+t_wave` thesis interpretation.
 
-- bridge analyses back to Phase 1
-- pre-QRS and shortcut falsification probes
-- DL comparison side branches
-- Chapman stress tests and older one-off experiments
-- thesis-only figure helpers and planning notes
+| Layer | PTB-XL | Georgia |
+|---|---:|---:|
+| Classification AUC | 0.9628 | 0.9088 strict-normal / 0.8228 hard-negative |
+| Feature-level ST/T target drop | 0.5240 | 0.5034 |
+| Feature-level CCS | 0.3840 | 0.4100 |
+| Waveform ST/T target drop | 0.5817 | 0.6032 |
+| Waveform pre-QRS control drop | -0.0838 | -0.0601 |
 
-Non-final artifacts are under `artifacts/phase2/archive/`. They are not part of the focused main result.
+## Archived
+
+Everything outside the focused path is archived:
+
+- exploratory `shape_template` summaries and figures
+- XAI baseline side branches
+- PTB-XL mechanism-map and non-STTC disease probes
+- collapse, spatial, deployable, breakthrough, shortcut, MI, and subgroup trials
+- MIMIC bootstrap utility
+- stale final-asset builders and focused-claim summaries
+
+Code archives live in `phase2/archive_experiments/`.
+Artifact archives live in `artifacts/phase2/archive/`.

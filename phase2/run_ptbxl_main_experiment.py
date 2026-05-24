@@ -24,7 +24,6 @@ from phase2.ecg_mechanism_core import (
     select_threshold,
 )
 from phase2.prototype_memory import CounterfactualMemory
-from phase2.run_ptbxl_mechanism_analysis import load_diagnostic_codes, load_superclasses, load_task_samples
 from phase2.ecg_features import build_feature_matrix
 
 
@@ -44,6 +43,20 @@ def resolve_target_combo(target: str, raw: str | None) -> tuple[str, ...]:
     if raw:
         return tuple(part.strip() for part in raw.split("+") if part.strip())
     return DEFAULT_TARGET_COMBOS[target]
+
+
+def load_archived_task_helpers():
+    try:
+        from phase2.archive_experiments.run_ptbxl_mechanism_analysis import (
+            load_diagnostic_codes,
+            load_superclasses,
+            load_task_samples,
+        )
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Non-STTC target helpers are archived. The focused Phase 2 thesis path uses --target STTC."
+        ) from exc
+    return load_diagnostic_codes, load_superclasses, load_task_samples
 
 
 def min_memory_distance(memory: CounterfactualMemory, scaler: StandardScaler, x: np.ndarray) -> np.ndarray:
@@ -443,6 +456,7 @@ def main() -> None:
     if args.target == "STTC":
         train_s, val_s, test_s, ood_s = load_ptbxl_norm_sttc_samples(args.csv_root)
     else:
+        load_diagnostic_codes, load_superclasses, load_task_samples = load_archived_task_helpers()
         superclasses = load_superclasses(args.ptbxl_root)
         diagnostic_codes = load_diagnostic_codes(args.ptbxl_root) if args.target == "MI" else None
         train_s, val_s, test_s = load_task_samples(
@@ -657,5 +671,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 
