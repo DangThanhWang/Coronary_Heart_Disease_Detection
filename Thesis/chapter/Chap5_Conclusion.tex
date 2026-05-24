@@ -1,0 +1,35 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{{Kết luận}}
+\chapter*{Kết luận}
+
+Bệnh động mạch vành là một bài toán có ý nghĩa thực tiễn cao nhưng cũng có mức độ phức tạp lớn, bởi việc đánh giá người bệnh thường phải dựa trên nhiều nguồn thông tin khác nhau. Xuất phát từ đặc điểm đó, khóa luận lựa chọn tiếp cận bài toán dưới góc nhìn hệ thống hỗ trợ đánh giá đa nguồn dữ liệu thay vì thu gọn toàn bộ vấn đề vào một mô hình đơn lẻ. Trên cơ sở này, khóa luận đề xuất một framework tổng thể và tập trung hiện thực hai thành phần phân tích cốt lõi của framework: thành phần phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và \textit{protective score}, cùng thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực. Nội dung nghiên cứu được triển khai thành hai pha tương ứng với hai thành phần nêu trên.
+
+\blocksep
+
+Đối với pha nghiên cứu thứ nhất, khóa luận đã xây dựng một quy trình khai phá luật kết hợp trên dữ liệu lâm sàng, bao gồm các bước tiền xử lý, rời rạc hóa, mã hóa one-hot, khai phá luật trong từng lần đánh giá chéo và xây dựng \textit{protective score} từ các luật bảo vệ. Kết quả trên ba bộ dữ liệu Z-Alizadeh, UCI Cleveland và UCI Hungarian cho thấy \textit{protective score} có quan hệ nghịch rõ với nhãn CAD và tạo ra sự tách biệt tương đối ổn định giữa nhóm nguy cơ thấp và nhóm nguy cơ cao. Mặc dù việc bổ sung \textit{protective score} vào logistic regression chỉ làm thay đổi diện tích dưới đường cong ROC ở mức rất nhỏ, pha nghiên cứu này vẫn cho thấy giá trị rõ ràng ở góc độ phân tầng nguy cơ và diễn giải lâm sàng.
+
+\blocksep
+
+Đối với pha nghiên cứu thứ hai, khóa luận đã xây dựng thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực, trong đó mô hình được huấn luyện trên các đặc trưng ECG 12 chuyển đạo và được kiểm tra bằng nhiều thí nghiệm phản thực. Trên bài toán \texttt{NORM vs STTC} của PTB-XL, mô hình nền đạt hiệu năng phân loại tốt. Quan trọng hơn, các thí nghiệm phản thực ở cả mức đặc trưng và mức dạng sóng đều cho thấy nhóm tín hiệu ST/T, đặc biệt là cặp \texttt{st\_segment + t\_wave}, có ảnh hưởng nổi bật đến quyết định của mô hình. Hiệu ứng này tiếp tục được quan sát trên dữ liệu Georgia ngoại bộ; đồng thời, các đối chứng âm tính và quan hệ liều -- đáp ứng cũng củng cố nhận định rằng mô hình đang dựa vào một cơ chế ST/T tương đối nhất quán.
+
+\blocksep
+
+Nhìn chung, các kết quả thu được cho thấy hướng tiếp cận hai pha là phù hợp trong phạm vi bài toán hỗ trợ đánh giá CAD. Pha thứ nhất cung cấp một thành phần phân tầng nguy cơ từ dữ liệu lâm sàng có khả năng truy vết và diễn giải. Pha thứ hai cung cấp một thành phần phân tích ECG có thể kiểm tra cơ chế tín hiệu bằng phản thực. Hai pha này không thay thế nhau, mà bổ sung cho nhau trong cùng một khung hỗ trợ đánh giá.
+
+\blocksep
+
+Bên cạnh các kết quả đạt được, khóa luận vẫn còn một số hạn chế. Thứ nhất, pha nghiên cứu thứ nhất sử dụng các bộ dữ liệu có quy mô không lớn, đồng thời phụ thuộc vào chất lượng rời rạc hóa và mức độ đầy đủ của các biến lâm sàng. Thứ hai, pha nghiên cứu thứ hai tập trung vào nhãn bất thường ST/T chứ không phải nhãn CAD xác định; vì vậy, kết quả không nên được diễn giải như một hệ thống chẩn đoán CAD chỉ từ ECG. Thứ ba, các phản thực được xây dựng trong không gian biểu diễn và trong khuôn khổ dữ liệu hiện có, nên chưa thể xem như bằng chứng nhân quả sinh lý theo nghĩa chặt. Ngoài ra, hiệu năng ngoại bộ của mô hình phân loại trên cấu hình âm tính khó vẫn suy giảm rõ, cho thấy khoảng cách giữa nghiên cứu cơ chế và khả năng triển khai thực tế còn đáng kể.
+
+\blocksep
+
+Từ các giới hạn trên, một số hướng phát triển tiếp theo có thể được xem xét. Đối với pha nghiên cứu thứ nhất, có thể mở rộng thêm các bộ dữ liệu lâm sàng hoặc chuẩn hóa tập biến đầu vào để kiểm tra tốt hơn tính ổn định của \textit{protective score}. Đối với pha nghiên cứu thứ hai, có thể mở rộng đánh giá sang các bộ dữ liệu ECG độc lập khác hoặc sang các nhãn bệnh tim mạch khác để kiểm tra sâu hơn tính tổng quát của cơ chế ST/T. Trên nền framework hệ thống đã đề xuất, cũng có thể tiếp tục hoàn thiện phần tích hợp báo cáo, quy tắc tổng hợp đầu ra từ hai thành phần và lớp ứng dụng hỗ trợ đánh giá cho người dùng cuối. Đặc biệt, việc tích hợp hai thành phần theo khung quyết định tuần tự có cơ sở nhất định từ y văn: một số nghiên cứu dịch tễ học cho thấy bất thường ST/T trên ECG mang giá trị dự đoán bổ sung độc lập so với điểm nguy cơ lâm sàng dạng Framingham score \cite{StromMoller2007, Badheka2013, Muccini2021}, gợi ý rằng hai nguồn bằng chứng này phản ánh hai khía cạnh bổ sung của cùng một bức tranh sinh lý bệnh và có thể được kết hợp một cách có căn cứ trong các nghiên cứu tiếp theo. Cuối cùng, việc tham khảo ý kiến chuyên gia tim mạch để đối chiếu các kết quả phản thực với lập luận lâm sàng thực tế là một hướng cần thiết nếu muốn đưa nghiên cứu tiến gần hơn tới ứng dụng.
+
+\blocksep
+
+Đối chiếu với bốn mục tiêu nghiên cứu đã nêu ở phần Mở đầu, có thể thấy khóa luận đã đáp ứng được các yêu cầu cốt lõi đã đặt ra. Mục tiêu đề xuất hướng tiếp cận đa nguồn dữ liệu ở mức framework hệ thống đã được hiện thực bằng một khung hai pha, trong đó pha thứ nhất xử lý dữ liệu lâm sàng dạng bảng và pha thứ hai xử lý dữ liệu ECG 12 chuyển đạo. Mục tiêu xây dựng quy trình khai phá luật kết hợp và thang điểm phân tầng đã được triển khai đầy đủ trong pha nghiên cứu thứ nhất, với đánh giá chéo không rò rỉ thông tin và \textit{protective score} cho tương quan nghịch nhất quán với nhãn CAD trên cả ba bộ dữ liệu. Mục tiêu nghiên cứu thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực đã được thực hiện thông qua phản thực ở hai mức, đối chứng âm tính và xác thực ngoại bộ trên Georgia. Cuối cùng, mục tiêu đánh giá tính hợp lý, nhất quán và giá trị hỗ trợ chuyên môn của hai pha cũng đã được xem xét qua nhiều lớp bằng chứng bổ sung nhau, từ phân tầng nguy cơ và độ ổn định luật đến hiệu ứng phản thực, quan hệ liều -- đáp ứng và lặp lại trên dữ liệu ngoại bộ.
+
+\blocksep
+
+Tóm lại, khóa luận đã đề xuất một framework hệ thống hỗ trợ đánh giá CAD theo hướng đa nguồn dữ liệu, đồng thời hiện thực và đánh giá hai thành phần phân tích cốt lõi của framework đó. Trong đó, đóng góp của pha thứ nhất nằm ở thành phần phân tầng nguy cơ CAD bằng khai phá luật kết hợp và \textit{protective score}, còn đóng góp của pha thứ hai nằm ở thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực. Trong phạm vi của một khóa luận tốt nghiệp, đây là một kết quả có cơ sở, có giới hạn rõ ràng và có thể tiếp tục phát triển trong các nghiên cứu sau.

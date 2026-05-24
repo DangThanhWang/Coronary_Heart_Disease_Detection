@@ -1,0 +1,265 @@
+\documentclass[a4paper,12pt,oneside]{book}
+
+\usepackage{lipsum}
+\usepackage{appendix}
+\usepackage[shortlabels]{enumitem}
+\usepackage{booktabs}
+\usepackage{rotating}
+\usepackage{hhline}
+\usepackage{colortbl}
+\usepackage{afterpage}
+\usepackage{mathtools}
+\usepackage{setspace}
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}
+\usepackage{amstext,amsmath,latexsym,amsbsy,amssymb,amsthm,amsfonts,multicol,nccmath}
+\usepackage[left=3cm,right=2cm,top=2.5cm,bottom=3cm,footskip=40pt]{geometry}
+\usepackage{pdflscape}
+\usepackage{tikz}
+\usepackage{array}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\usetikzlibrary{calc}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{array,color,colortbl}
+\setcounter{secnumdepth}{4}
+\usepackage{placeins}
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+\setlength{\parindent}{1cm}
+\usepackage{color}
+\usepackage{indentfirst}
+\usepackage{exscale,eucal}
+\usepackage{fancyhdr}
+\usepackage{fncychap}
+\usepackage[chapter]{algorithm}
+\usepackage{multirow}
+\usepackage{graphicx}
+\PassOptionsToPackage{update=false}{epstopdf-pkg}
+\usepackage{algpseudocode}
+\usepackage{longtable}
+\usepackage{etoolbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\usetikzlibrary{calc,arrows,decorations.pathmorphing,backgrounds,positioning,fit,shapes,decorations.shapes,shapes.geometric,decorations.pathreplacing,decorations.text}
+\usepackage{circuitikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepackage{titlesec}
+\usepackage[labelsep=period]{caption}
+\usepackage{subfigure}
+\DeclareCaptionFormat{myformat}{\fontsize{13}{15}\selectfont#1#2#3}
+\captionsetup{format=myformat}
+\usepackage{titletoc}
+\usepackage[subfigure]{tocloft}
+
+\providecommand{\phantomsection}{}
+
+\tikzstyle{block} = [draw,rectangle,thick,minimum height=2em,minimum width=2em,drop shadow,fill=blue!50]
+\tikzstyle{sum} = [draw,circle,inner sep=0mm,minimum size=2mm]
+\tikzstyle{connector} = [->,thick]
+\tikzstyle{line} = [very thick]
+\tikzstyle{branch} = [circle,inner sep=0pt,minimum size=1mm,fill=black,draw=black]
+\tikzstyle{axes} = [->,>=stealth',semithick]
+\tikzstyle{important line} = [very thick,draw=red]
+\tikzstyle{important text} = [rounded corners,fill=red!10,inner sep=1ex]
+
+\renewcommand{\chaptername}{Chương}
+\renewcommand{\chaptertitlename}{Chương}
+\titlelabel{\thetitle.\,\;}
+\titleformat{\chapter}[display]
+  {\fontsize{14}{16}\selectfont\bfseries\centering}
+  {\MakeUppercase{\chaptertitlename}\ \thechapter}{0pt}{\fontsize{14}{16}\selectfont\MakeUppercase}
+\titlespacing{\chapter}{0pt}{0pt}{40pt}
+\titleformat*{\section}{\fontsize{14}{14}\selectfont\bfseries}
+\titleformat*{\subsection}{\fontsize{14}{14}\selectfont\bfseries\slshape}
+\titleformat*{\subsubsection}{\fontsize{14}{14}\slshape}
+\titleformat*{\paragraph}{\large\bfseries}
+\titleformat*{\subparagraph}{\large\bfseries}
+\graphicspath{{figures/}}
+
+\titlespacing\section{0pt}{6pt plus 4pt minus 2pt}{1pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{6pt plus 4pt minus 2pt}{1pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{6pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\setlength{\parskip}{6pt}
+\setlist[itemize]{topsep=3pt,itemsep=2pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{topsep=3pt,itemsep=2pt,parsep=0pt,partopsep=0pt}
+\setlist[description]{topsep=3pt,itemsep=2pt,parsep=0pt,partopsep=0pt}
+\newcommand{\blocksep}{}
+
+\cftsetpnumwidth{20pt}
+\titlecontents{chapter}
+  [0pt]
+  {}
+  {\fontsize{13.5}{14}\selectfont\MakeUppercase{\chaptername}\ \thecontentslabel.\,\;}
+  {}
+  {\cftdotfill{\cftdotsep}\contentspage}
+\renewcommand{\cftsecaftersnum}{.}
+\renewcommand{\cftsubsecaftersnum}{.}
+
+\newtheorem{definition}{\bf Định nghĩa}[chapter]
+\newtheorem{theorem}{\bf Định lý}[chapter]
+\newtheorem{lemma}{\bf Bổ đề}[chapter]
+
+\renewcommand{\cftfigfont}{Hình~}
+\renewcommand{\cfttabfont}{Bảng~}
+\floatname{algorithm}{Thuật toán}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\makeatletter
+\renewcommand\@biblabel[1]{[#1]}
+\makeatother
+\renewcommand{\baselinestretch}{1.0}
+\emergencystretch=3em
+\flushbottom
+\renewcommand*{\bibfont}{\fontsize{13}{16.9}\selectfont}
+
+\begin{document}
+\fontsize{13}{16.9}\selectfont
+
+\pagestyle{empty}
+\input{cover/bia-ngoai}
+\newpage
+
+\pagestyle{plain}
+\pagenumbering{gobble}
+\input{cover/bia-trong}
+\newpage
+
+\pagestyle{plain}
+\pagenumbering{roman}
+\setlength{\parindent}{1cm}
+\fontsize{13}{16.9}\selectfont
+
+\input{cover/loi-cam-on}
+\newpage
+\input{cover/loi-cam-doan}
+\newpage
+\input{cover/tom-tat}
+\newpage
+
+\renewcommand{\contentsname}{\vspace{-70pt}\centerline{\fontsize{14}{16}\selectfont\MakeUppercase{Mục lục}}}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Mục lục}
+\tableofcontents
+
+\input{cover/viet-tat}
+\newpage
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Danh mục hình vẽ}
+\renewcommand{\listfigurename}{\vspace{-70pt}\centerline{\fontsize{14}{16}\selectfont\MakeUppercase{Danh mục hình vẽ}}}
+\listoffigures
+\fontsize{13}{16.9}\selectfont
+\newpage
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Danh mục bảng biểu}
+\renewcommand{\listtablename}{\vspace{-70pt}\centerline{\fontsize{14}{16}\selectfont\MakeUppercase{Danh mục bảng biểu}}}
+\listoftables
+\fontsize{13}{16.9}\selectfont
+\newpage
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+
+\input{chapter/Chap0_Introduction}
+\newpage
+\input{chapter/Chap1_Chapter1}
+\newpage
+\input{chapter/Chap2_Chapter2}
+\newpage
+\input{chapter/Chap3_Chapter3}
+\newpage
+\input{chapter/Chap4_Chapter4}
+\newpage
+\input{chapter/Chap5_Conclusion}
+\newpage
+
+% \appendix
+% \input{cover/phu-luc}
+
+\renewcommand{\bibname}{Tài liệu tham khảo}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{TÀI LIỆU THAM KHẢO}
+\fontsize{13}{16.9}\selectfont
+
+\begin{thebibliography}{99}
+
+\section*{Tiếng Anh}
+
+\bibitem{Agrawal1994}
+R. Agrawal and R. Srikant, ``Fast algorithms for mining association rules,'' {\em Proceedings of the 20th International Conference on Very Large Data Bases (VLDB)}, 1994, pp.~487--499.
+
+\bibitem{Alday2021}
+E. A. P. Alday, A. Gu, A. J. Shah, C. Robichaux, A. K. I. Wong, C. Liu, F. Liu, A. B. Rad, A. Elola, S. Seyedi, Q. Li, A. Sharma, G. D. Clifford and M. A. Reyna, ``Classification of 12-lead ECGs: The PhysioNet/Computing in Cardiology Challenge 2020,'' {\em Physiological Measurement}, Vol.~41, 2021, pp.~124003.
+
+\bibitem{AlizadehSani2013}
+R. Alizadehsani, J. Habibi, M. J. Hosseini, H. Mashayekhi, R. Boghrati, A. Ghandeharioun, B. Bahadorian and Z. A. Sani, ``A data mining approach for diagnosis of coronary artery disease,'' {\em Computer Methods and Programs in Biomedicine}, Vol.~111, 2013, pp.~52--61.
+
+\bibitem{Badheka2013}
+A. O. Badheka, N. J. Patel, P. M. Grover et al., ``ST-T wave abnormality in lead aVR and reclassification of cardiovascular risk (from the National Health and Nutrition Examination Survey-III),'' {\em The American Journal of Cardiology}, Vol.~112, 2013, pp.~805--810.
+
+\bibitem{Clifford2006}
+G. D. Clifford, F. Azuaje and P. McSharry, {\em Advanced Methods and Tools for ECG Data Analysis}, Artech House, Norwood, 2006.
+
+\bibitem{Conroy2003}
+R. M. Conroy, K. Py\"{o}r\"{a}l\"{a}, A. P. Fitzgerald et al., ``Estimation of ten-year risk of fatal cardiovascular disease in Europe: the SCORE project,'' {\em European Heart Journal}, Vol.~24, 2003, pp.~987--1003.
+
+\bibitem{DAgostino2008}
+R. B. D'Agostino, R. S. Vasan, M. J. Pencina et al., ``General cardiovascular risk profile for use in primary care,'' {\em Circulation}, Vol.~117, 2008, pp.~743--753.
+
+\bibitem{Detrano1989}
+R. Detrano, A. Janosi, W. Steinbrunn, M. Pfisterer, J. J. Schmid, S. Sandhu, K. H. Guppy, S. Lee and V. Froelicher, ``International application of a new probability algorithm for the diagnosis of coronary artery disease,'' {\em American Journal of Cardiology}, Vol.~64, 1989, pp.~304--310.
+
+\bibitem{Diamond1979}
+G. A. Diamond and J. S. Forrester, ``Analysis of probability as an aid in the clinical diagnosis of coronary-artery disease,'' {\em The New England Journal of Medicine}, Vol.~300, 1979, pp.~1350--1358.
+
+\bibitem{Guo2017}
+C. Guo, G. Pleiss, Y. Sun and K. Q. Weinberger, ``On calibration of modern neural networks,'' {\em Proceedings of the 34th International Conference on Machine Learning (ICML)}, 2017, pp.~1321--1330.
+
+\bibitem{Krittanawong2017}
+C. Krittanawong, H. J. Zhang, Z. Wang, M. Aydar and T. Kitai, ``Artificial intelligence in precision cardiovascular medicine,'' {\em Journal of the American College of Cardiology}, Vol.~69, 2017, pp.~2657--2664.
+
+\bibitem{Lavrac1999}
+N. Lavra\v{c}, P. A. Flach and B. Zupan, ``Rule evaluation measures: A unifying view,'' in {\em Proceedings of the 9th International Workshop on Inductive Logic Programming (ILP'99)}, Lecture Notes in Artificial Intelligence, Vol.~1634, Springer, 1999, pp.~174--185.
+
+\bibitem{Libby2011}
+P. Libby, P. M. Ridker and G. K. Hansson, ``Progress and challenges in translating the biology of atherosclerosis,'' {\em Nature}, Vol.~473, 2011, pp.~317--325.
+
+\bibitem{Lipton2018}
+Z. C. Lipton, ``The mythos of model interpretability,'' {\em Communications of the ACM}, Vol.~61, No.~10, 2018, pp.~36--43.
+
+\bibitem{Muccini2021}
+C. Muccini, L. Galli, A. Poli et al., ``Exercise ECG for coronary artery disease screening in people living with HIV,'' {\em AIDS}, Vol.~35, 2021, pp.~933--938.
+
+\bibitem{Quinonero2009}
+J. Quinonero-Candela, M. Sugiyama, A. Schwaighofer and N. D. Lawrence, {\em Dataset Shift in Machine Learning}, MIT Press, Cambridge, 2009.
+
+\bibitem{Raschka2018}
+S. Raschka, ``MLxtend: Providing machine learning and data science utilities and extensions to Python's scientific computing stack,'' {\em Journal of Open Source Software}, Vol.~3, 2018, pp.~638.
+
+\bibitem{Rudin2019}
+C. Rudin, ``Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead,'' {\em Nature Machine Intelligence}, Vol.~1, 2019, pp.~206--215.
+
+\bibitem{StromMoller2007}
+C. Str\"{o}m M\"{o}ller, B. Zethelius, J. Sundstr\"{o}m and L. Lind, ``Persistent ischaemic ECG abnormalities on repeated ECG examination have important prognostic value for cardiovascular disease beyond established risk factors: a population-based study in middle-aged men with up to 32 years of follow-up,'' {\em Heart}, Vol.~93, 2007, pp.~1104--1110.
+
+\bibitem{Topol2019}
+E. J. Topol, ``High-performance medicine: the convergence of human and artificial intelligence,'' {\em Nature Medicine}, Vol.~25, 2019, pp.~44--56.
+
+\bibitem{Wachter2017}
+S. Wachter, B. Mittelstadt and C. Russell, ``Counterfactual explanations without opening the black box: Automated decisions and the GDPR,'' {\em Harvard Journal of Law \& Technology}, Vol.~31, 2017, pp.~841--887.
+
+\bibitem{Wagner2020}
+P. Wagner, N. Strodthoff, R. Bousseljot, D. Kreiseler, F. I. Lunze, W. Samek and T. Schaeffter, ``PTB-XL, a large publicly available electrocardiography dataset,'' {\em Scientific Data}, Vol.~7, 2020, pp.~154.
+
+\end{thebibliography}
+
+\end{document}

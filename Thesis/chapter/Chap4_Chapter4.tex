@@ -1,0 +1,421 @@
+\clearpage
+\phantomsection
+
+\setcounter{chapter}{3}
+\chapter[{THỰC NGHIỆM VÀ ĐÁNH GIÁ}]{Thực nghiệm và đánh giá}
+
+Chương này trình bày các kết quả thực nghiệm của hai pha nghiên cứu đã mô tả trong các chương trước. Nội dung chương được tổ chức thành hai phần tương ứng với hai pha. Trước hết, pha nghiên cứu thứ nhất được đánh giá trên ba bộ dữ liệu lâm sàng dạng bảng nhằm xem xét khả năng phân tầng nguy cơ của \textit{protective score} và độ ổn định của quy trình khai phá luật. Tiếp theo, pha nghiên cứu thứ hai được đánh giá trên dữ liệu ECG 12 chuyển đạo, với trọng tâm là việc kiểm chứng cơ chế ST/T thông qua phản thực mức đặc trưng, phản thực mức dạng sóng, xác thực ngoại bộ và các đối chứng âm tính.
+
+\blocksep
+
+Mục tiêu của chương không chỉ dừng ở việc liệt kê các chỉ số kết quả, mà còn làm rõ ý nghĩa của từng nhóm kết quả đối với phạm vi kết luận của khóa luận. Với pha nghiên cứu thứ nhất, vấn đề chính là liệu \textit{protective score} có thật sự mang giá trị phân tầng nguy cơ CAD hay không. Với pha nghiên cứu thứ hai, câu hỏi trung tâm là liệu mô hình ECG có cho thấy một cơ chế ST/T nhất quán và có thể kiểm tra được hay không.
+
+\section{Thiết lập thực nghiệm}
+
+\blocksep
+
+\subsection{Thiết lập cho pha nghiên cứu thứ nhất}
+
+\blocksep
+
+Pha nghiên cứu thứ nhất được thực hiện trên ba bộ dữ liệu Z-Alizadeh Sani, UCI Cleveland và UCI Hungarian. Toàn bộ quy trình được đánh giá chéo 5 lần theo cơ chế phân tầng. Trong mỗi lần chia dữ liệu, các bước khai phá luật, chọn luật và xây dựng \textit{protective score} chỉ được thực hiện trên tập huấn luyện; tập kiểm tra chỉ được dùng để tính điểm ngoài mẫu và các chỉ số đánh giá cuối cùng.
+
+\blocksep
+
+Các tham số chính của khai phá luật gồm:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item \texttt{min\_support = 0.06};
+	\item \texttt{min\_confidence = 0.60};
+	\item \texttt{min\_lift = 1.40};
+	\item \texttt{max\_len = 3};
+	\item \texttt{top\_n\_rules = 10};
+	\item ngưỡng phân tầng \texttt{threshold = 2}.
+\end{itemize}
+
+\blocksep
+
+Các độ đo chính của pha này gồm hệ số tương quan hạng Spearman giữa \textit{protective score} và nhãn CAD, tỷ lệ CAD trong hai nhóm điểm cao/thấp, odds ratio giữa hai nhóm, cùng với so sánh mô hình logistic đối chiếu và mô hình logistic có bổ sung \textit{protective score}.
+
+\blocksep
+
+\subsection{Thiết lập cho pha nghiên cứu thứ hai}
+
+\blocksep
+
+Pha nghiên cứu thứ hai được thực hiện trên nhiệm vụ \texttt{NORM vs STTC} của dữ liệu PTB-XL 12 chuyển đạo và được kiểm tra lại trên dữ liệu Georgia ngoại bộ. Mô hình phân loại chính là \texttt{HistGradient\discretionary{}{}{}Boosting\discretionary{}{}{}Classifier}. Trên PTB-XL, số mẫu dùng cho nhiệm vụ chính gồm 8\,603 mẫu huấn luyện, 1\,116 mẫu xác thực và 1\,082 mẫu kiểm tra; trong tập kiểm tra có 213 mẫu dương tính.
+
+\blocksep
+
+Các đặc trưng ECG được chia thành tám nhóm: \texttt{rhythm} (6), \texttt{p\_wave} (91), \texttt{pr\_segment} (65), \texttt{qrs} (104), \texttt{st\_segment} (104), \texttt{t\_wave} (143), \texttt{global\_morph} (52) và \texttt{beat\_baseline} (234). Trên bài toán \texttt{NORM vs STTC}, nhóm mục tiêu chính được sử dụng trong các thí nghiệm phản thực là cặp \texttt{st\_segment + t\_wave} (247 đặc trưng). Mỗi nhóm đặc trưng bao gồm cả thống kê phân đoạn và các điểm dạng sóng tương ứng với đúng vùng sinh lý của nó, cho phép tạo ra các nhóm đối chứng có kích thước gần tương đương hoặc lớn hơn nhóm mục tiêu để so sánh công bằng.
+
+\blocksep
+
+Đối với dữ liệu Georgia, hai cấu hình âm tính được sử dụng: \textit{strict\_normal} (các mẫu bình thường nghiêm ngặt) và \textit{no\_st\_t} (toàn bộ các mẫu không mang mã ST/T).
+
+\blocksep
+
+Các độ đo đánh giá gồm hai nhóm. Nhóm thứ nhất là các chỉ số phân loại quen thuộc như diện tích dưới đường cong ROC, diện tích dưới đường cong precision-recall, độ chính xác cân bằng và F1 vĩ mô. Nhóm thứ hai là các độ đo liên quan đến cơ chế, bao gồm mức giảm xác suất trung bình sau phản thực, tỷ lệ đổi nhãn, chênh lệch giữa nhóm mục tiêu và nhóm đối chứng tốt nhất, tính đơn điệu của quá trình thay đổi dần tham số \(\alpha\), và mức độ lặp lại của hiệu ứng trên dữ liệu ngoại bộ.
+
+\section{Kết quả pha nghiên cứu thứ nhất}
+
+\blocksep
+
+\subsection{Tổng quan kết quả trên ba bộ dữ liệu}
+
+\blocksep
+
+Bảng~\ref{tab:phase1_summary} trình bày các kết quả tổng hợp của pha nghiên cứu thứ nhất trên ba bộ dữ liệu lâm sàng. Có thể thấy \textit{protective score} đều cho tương quan nghịch với nhãn CAD trên cả ba bộ dữ liệu, với hệ số Spearman nằm trong khoảng từ xấp xỉ $-0.49$ đến $-0.61$.
+
+\begin{table}[H]
+\centering
+\caption{Tổng hợp kết quả chính của pha nghiên cứu thứ nhất}
+\label{tab:phase1_summary}
+\begin{tabular}{p{0.23\linewidth}C{0.10\linewidth}C{0.13\linewidth}C{0.15\linewidth}C{0.15\linewidth}C{0.10\linewidth}}
+\hline
+\textbf{Bộ dữ liệu} & \textbf{Số mẫu} & \textbf{$\rho$ Spearman} & \shortstack{\textbf{Tỷ lệ CAD}\\\textbf{điểm cao}} & \shortstack{\textbf{Tỷ lệ CAD}\\\textbf{điểm thấp}} & \textbf{$\Delta$AUC} \\
+\hline
+Z-Alizadeh & 303 & $-0.613$ & 0.467 & 0.960 & $-0.0004$ \\
+UCI Cleveland & 303 & $-0.589$ & 0.184 & 0.759 & $+0.0023$ \\
+UCI Hungarian & 294 & $-0.495$ & 0.115 & 0.581 & $+0.0002$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+Trên cả ba bộ dữ liệu, nhóm có \textit{protective score} thấp đều có tỷ lệ CAD cao hơn rõ rệt so với nhóm có điểm cao. Kết quả này phù hợp với cách xây dựng điểm: bệnh nhân càng thỏa mãn nhiều dấu hiệu bảo vệ ổn định thì càng có xu hướng thuộc nhóm nguy cơ thấp hơn. Đặc điểm này thể hiện rõ nhất ở bộ Z-Alizadeh, nơi tỷ lệ CAD ở nhóm điểm thấp lên đến khoảng 96.0\%, trong khi ở nhóm điểm cao là khoảng 46.7\%.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figure_phase1_summary.png}
+    \caption{Tổng hợp kết quả chính của pha nghiên cứu thứ nhất trên ba bộ dữ liệu: tỷ lệ CAD theo nhóm protective score và so sánh hai cấu hình logistic.}
+    \label{fig:phase1_summary_result}
+\end{figure}
+
+\blocksep
+
+\subsection{Giá trị phân tầng nguy cơ}
+
+\blocksep
+
+Nếu xem xét dưới góc độ phân tầng, kết quả của pha nghiên cứu thứ nhất là khá nhất quán. Trên Z-Alizadeh, odds ratio của nhóm điểm thấp so với nhóm điểm cao xấp xỉ 25.5. Trên UCI Cleveland và UCI Hungarian, giá trị này lần lượt vào khoảng 13.7 và 10.3. Mặc dù các bộ dữ liệu có quy mô nhỏ và cấu trúc biến đầu vào khác nhau, sự tách biệt giữa nhóm điểm cao và nhóm điểm thấp vẫn được duy trì.
+
+\blocksep
+
+Kết quả này cho thấy \textit{protective score} không chỉ mang ý nghĩa trên riêng một bộ dữ liệu. Ngay cả khi số lượng luật và số chiều đặc trưng thay đổi giữa các bộ dữ liệu, cách xây dựng điểm vẫn tạo ra một xu hướng ổn định: điểm càng thấp thì xác suất thuộc nhóm CAD càng cao.
+
+\blocksep
+
+Hình~\ref{fig:phase1_rule_stability_result} cho thấy các tổ hợp luật bảo vệ hàng đầu được lặp lại nhất quán qua các fold của đánh giá chéo. Đây là bằng chứng bổ sung cho thấy giá trị phân tầng nguy cơ của \textit{protective score} không đến từ một vài luật ngẫu nhiên riêng lẻ, mà đến từ các tổ hợp đặc trưng xuất hiện bền vững trên từng bộ dữ liệu.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figure_phase1_rule_stability.png}
+    \caption{Độ ổn định của các tổ hợp protective rules hàng đầu qua các fold trên ba bộ dữ liệu của pha nghiên cứu thứ nhất.}
+    \label{fig:phase1_rule_stability_result}
+\end{figure}
+
+\blocksep
+
+\subsection{So sánh hai cấu hình logistic}
+
+\blocksep
+
+Khi bổ sung \textit{protective score} vào logistic regression, mức thay đổi về diện tích dưới đường cong ROC là rất nhỏ. Trên Z-Alizadeh, AUC của mô hình logistic có bổ sung protective score giảm nhẹ từ 0.9297 xuống 0.9293. Trên UCI Cleveland, AUC tăng từ 0.9049 lên 0.9073. Trên UCI Hungarian, AUC tăng từ 0.9073 lên 0.9075. Các thay đổi này đều có độ lớn rất nhỏ.
+
+\blocksep
+
+Kết quả trên phù hợp với định hướng ban đầu của pha nghiên cứu thứ nhất. \textit{Protective score} không được xây dựng để thay thế hoàn toàn các mô hình phân loại xác suất, cũng không nhằm tối đa hóa AUC. Giá trị chính của phương pháp nằm ở chỗ tạo ra được một lớp tri thức có thể diễn giải và sử dụng cho phân tầng nguy cơ. Vì vậy, phần so sánh giữa mô hình logistic đối chiếu và mô hình logistic có bổ sung \textit{protective score} chỉ nên được xem như một phép kiểm tra phụ trợ, không phải kết quả trung tâm.
+
+\blocksep
+
+Ngoài ra, trên bộ Z-Alizadeh, mối quan hệ giữa \textit{protective score} ngoài mẫu và tỷ lệ CAD cũng được thể hiện trực quan trong Hình~\ref{fig:phase1_zalizadeh_score_result}. Khi điểm tăng, tỷ lệ CAD có xu hướng giảm, phù hợp với cách diễn giải \textit{protective score} như một chỉ số phản ánh mức độ hiện diện của các dấu hiệu bảo vệ.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.78\linewidth]{figure_phase1_zalizadeh_score.png}
+    \caption{Ví dụ trên bộ Z-Alizadeh: tỷ lệ CAD theo protective score ngoài mẫu. Con số gắn trên mỗi điểm biểu diễn số lượng mẫu trong mức điểm tương ứng.}
+    \label{fig:phase1_zalizadeh_score_result}
+\end{figure}
+
+\blocksep
+
+\subsection{Nhận xét chung về pha nghiên cứu thứ nhất}
+
+\blocksep
+
+Nhìn chung, pha nghiên cứu thứ nhất cho thấy hai kết quả đáng chú ý. Thứ nhất, quy trình khai phá luật theo cơ chế ngoài mẫu tạo ra một \textit{protective score} có quan hệ nghịch rõ với nhãn CAD trên cả ba bộ dữ liệu. Thứ hai, phương pháp vẫn giữ được khả năng phân tầng nguy cơ dù số lượng luật và số chiều dữ liệu khác nhau đáng kể giữa các bộ dữ liệu.
+
+\blocksep
+
+Giới hạn của pha này cũng thể hiện khá rõ. Kết quả phụ thuộc vào cách rời rạc hóa biến đầu vào và vào chất lượng biến lâm sàng sẵn có trong từng bộ dữ liệu. Hơn nữa, phương pháp không mang lại một bước nhảy lớn về hiệu năng phân loại xác suất. Vì vậy, đóng góp phù hợp của pha nghiên cứu thứ nhất nên được phát biểu ở mức: xây dựng một lớp phân tầng nguy cơ CAD có thể diễn giải, thay vì một mô hình dự đoán vượt trội về chỉ số phân loại.
+
+\section{Kết quả pha nghiên cứu thứ hai}
+
+\blocksep
+
+\subsection{Hiệu năng phân loại nội bộ trên PTB-XL}
+
+\blocksep
+
+Trên tập kiểm tra nội bộ của nhiệm vụ \texttt{NORM vs STTC}, mô hình nền đạt diện tích dưới đường cong ROC 0.9628, diện tích dưới đường cong precision-recall 0.8973, độ chính xác cân bằng 0.8892 và F1 vĩ mô 0.8308. Các khoảng tin cậy bootstrap 95\% tương đối hẹp, cho thấy hiệu năng của mô hình ổn định trên tập kiểm tra hiện có.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả phân loại nội bộ trên PTB-XL cho nhiệm vụ \texttt{NORM vs STTC}}
+\label{tab:phase2_ptbxl_cls}
+\begin{tabular}{p{0.32\linewidth}C{0.18\linewidth}C{0.18\linewidth}C{0.18\linewidth}}
+\hline
+\textbf{Chỉ số} & \textbf{Giá trị} & \textbf{CI 95\% thấp} & \textbf{CI 95\% cao} \\
+\hline
+diện tích dưới đường cong ROC & 0.9628 & 0.9502 & 0.9743 \\
+diện tích dưới đường cong precision-recall & 0.8973 & 0.8668 & 0.9263 \\
+Balanced accuracy & 0.8892 & 0.8676 & 0.9109 \\
+Macro-F1 & 0.8308 & 0.8041 & 0.8572 \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+Về mặt phân loại, đây là mức kết quả tốt cho bài toán ST/T trên dữ liệu nội bộ. Tuy nhiên, như đã nêu trong Chương~3, phần đáng quan tâm hơn của pha nghiên cứu này không nằm ở bản thân các chỉ số phân loại, mà ở việc kiểm tra cơ chế ST/T đằng sau dự đoán của mô hình.
+
+\blocksep
+
+\subsection{Phản thực mức đặc trưng trên PTB-XL}
+
+\blocksep
+
+Khi thực hiện phản thực trên cặp nhóm mục tiêu \texttt{st\_segment + t\_wave} (247 đặc trưng), mức giảm xác suất trung bình trên 213 ca dương tính trong tập kiểm tra đạt 0.5240, với khoảng tin cậy 95\% từ 0.4791 đến 0.5692. Tỷ lệ đổi nhãn từ dương sang âm đạt khoảng 43.19\%. Trung vị mức giảm xác suất là 0.5496.
+
+\blocksep
+
+Nhóm đối chứng tốt nhất không thuộc ST/T trong báo cáo này là \texttt{global\_morph + beat\_baseline} (286 đặc trưng), với mức giảm xác suất trung bình chỉ khoảng 0.1400. Điểm đáng chú ý là nhóm đối chứng này có \textit{nhiều đặc trưng hơn} nhóm mục tiêu (286 so với 247), nhưng vẫn cho hiệu ứng yếu hơn rõ rệt. Chênh lệch giữa nhóm mục tiêu và nhóm đối chứng tốt nhất đạt 0.3840 (khoảng tin cậy 95\%: 0.329 đến 0.440). Nếu xét theo tỷ lệ, hiệu ứng của nhóm mục tiêu lớn hơn nhóm đối chứng tốt nhất khoảng 3.74 lần.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả phản thực mức đặc trưng trên PTB-XL}
+\label{tab:phase2_ptbxl_cf}
+\begin{tabular}{p{0.35\linewidth}C{0.18\linewidth}C{0.18\linewidth}}
+\hline
+\textbf{Độ đo} & \textbf{Nhóm mục tiêu} & \textbf{Nhóm đối chứng tốt nhất} \\
+\hline
+Tổ hợp nhóm & \texttt{st\_segment + t\_wave} & \texttt{global\_morph + beat\_baseline} \\
+Số đặc trưng & 247 & 286 \\
+Mean probability drop & 0.5240 & 0.1400 \\
+Median probability drop & 0.5496 & 0.0364 \\
+Flip rate & 0.4319 & 0.1080 \\
+Positive drop rate & 0.9577 & 0.8685 \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+Kết quả này cho thấy khi thay đúng nhóm đặc trưng liên quan đến ST/T bằng nguyên mẫu bình thường, dự đoán của mô hình thay đổi mạnh hơn rõ rệt so với các nhóm không-ST/T. Việc nhóm đối chứng tốt nhất có nhiều đặc trưng hơn nhóm mục tiêu nhưng vẫn cho hiệu ứng yếu hơn là một bằng chứng quan trọng: khác biệt quan sát được không thể quy đơn thuần về kích thước nhóm, mà phản ánh vai trò thực chất của nội dung sinh lý thuộc vùng ST/T.
+
+\blocksep
+
+Hình~\ref{fig:phase2_cf_comparison} tổng hợp trực quan kết quả so sánh tất cả các nhóm đặc trưng.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth, height=9cm, keepaspectratio]{figure_phase2_cf_comparison.png}
+    \caption{So sánh hiệu ứng phản thực giữa nhóm mục tiêu \texttt{st\_segment + t\_wave} (247 đặc trưng) và tất cả các nhóm đối chứng trên PTB-XL. Nhóm đối chứng tốt nhất \texttt{global\_morph + beat\_baseline} có 286 đặc trưng, lớn hơn nhóm mục tiêu, nhưng vẫn cho mức giảm thấp hơn rõ rệt.}
+    \label{fig:phase2_cf_comparison}
+\end{figure}
+
+\blocksep
+
+\subsection{Phản thực mức dạng sóng trên PTB-XL}
+
+\blocksep
+
+Phản thực mức dạng sóng tiếp tục kiểm tra cùng giả thuyết ở mức tín hiệu gốc. Khi chỉnh sửa trực tiếp vùng ST/T trên dạng sóng, mức giảm xác suất trung bình đạt 0.5817, với khoảng tin cậy 95\% từ 0.5326 đến 0.6318. Trung vị mức giảm xác suất là 0.6847. Tỷ lệ đổi nhãn là khoảng 48.36\%, còn tỷ lệ mẫu có xác suất giảm là khoảng 92.49\%.
+
+\blocksep
+
+Trong cùng báo cáo, cửa sổ đối chứng tốt nhất trên PTB-XL là \texttt{P/PR}, chỉ cho mức giảm trung bình khoảng 0.0254; cửa sổ \texttt{QRS} cũng gần tương đương với mức giảm khoảng 0.0252. Đáng chú ý hơn, cửa sổ \texttt{pre-QRS} cho mức giảm trung bình âm, khoảng $-0.0838$. Điều này cho thấy khi chỉnh sửa ở vùng \texttt{pre-QRS}, mô hình không những không giảm xác suất theo cùng chiều, mà còn có xu hướng phản ứng ngược lại.
+
+\blocksep
+
+Nếu so sánh trực tiếp, chênh lệch giữa cửa sổ mục tiêu ST/T và cửa sổ \texttt{pre-QRS} đạt khoảng 0.6656. Đây là đối chứng âm tính mạnh nhất ở mức dạng sóng trong pha nghiên cứu thứ hai. Lý do là \texttt{pre-QRS} nằm ngoài vùng ST/T mục tiêu; do đó, nếu mô hình chỉ phản ứng với việc “chỉnh sửa bất kỳ” trên tín hiệu, hiệu ứng ở cửa sổ này phải cùng chiều hoặc ít nhất không quá khác biệt. Kết quả ngược lại cho thấy mô hình không phản ứng một cách không chọn lọc với mọi can thiệp trên dạng sóng, mà phản ứng chủ yếu khi tác động đúng vào vùng ST/T.
+
+\blocksep
+
+Hình~\ref{fig:phase2_waveform_controls} tổng hợp trực quan các cửa sổ mục tiêu và cửa sổ đối chứng ở mức dạng sóng trên cả PTB-XL và Georgia. Có thể thấy hiệu ứng lớn nhất luôn thuộc về cửa sổ \texttt{ST/T}, trong khi các cửa sổ \texttt{QRS}, \texttt{P/PR} và đặc biệt \texttt{pre-QRS} cho hiệu ứng nhỏ hơn nhiều hoặc đảo dấu.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figure_waveform_controls.png}
+    \caption{So sánh mức giảm xác suất giữa cửa sổ mục tiêu ST/T và các cửa sổ đối chứng ở mức dạng sóng trên PTB-XL và Georgia.}
+    \label{fig:phase2_waveform_controls}
+\end{figure}
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figure_phase2_preqrs_negative_control.png}
+    \caption{Đối chứng âm tính \texttt{pre-QRS} cho hiệu ứng đảo dấu trên cả PTB-XL và Georgia, cho thấy mô hình không phản ứng đồng đều với mọi thao tác chỉnh sửa dạng sóng.}
+    \label{fig:phase2_preqrs_negative_control}
+\end{figure}
+
+\subsection{Quan hệ liều -- đáp ứng trên PTB-XL}
+
+\blocksep
+
+Thí nghiệm thay đổi dần tham số \(\alpha\) cho thấy mức giảm xác suất tăng dần theo cường độ chỉnh sửa ST/T. Cụ thể, trên PTB-XL, mức giảm xác suất trung bình lần lượt là 0.1264, 0.3072, 0.4890 và 0.5817 tương ứng với $\alpha = 0.25$, $0.50$, $0.75$ và $1.00$.
+
+\blocksep
+
+Xu hướng tăng gần đơn điệu này là một kết quả quan trọng. Nó cho thấy mô hình không chỉ phản ứng với một phép thay thế hoàn toàn, mà còn phản ứng tương ứng với mức độ “bình thường hóa” của vùng ST/T. Trong ngữ cảnh của khóa luận, đây là một kiểm tra cần thiết để tránh việc kết luận cơ chế chỉ dựa trên một thao tác chỉnh sửa đơn lẻ.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\linewidth]{figure_waveform_dose_response.png}
+    \caption{Quan hệ liều -- đáp ứng của phản thực dạng sóng ST/T trên PTB-XL và Georgia khi tăng dần cường độ can thiệp $\alpha$.}
+    \label{fig:phase2_waveform_dose_response}
+\end{figure}
+
+\subsection{Xác thực ngoại bộ trên Georgia}
+
+\blocksep
+
+Trên dữ liệu Georgia với cấu hình \textit{strict\_normal}, mô hình đạt diện tích dưới đường cong ROC 0.9088, diện tích dưới đường cong precision-recall 0.9600 và độ chính xác cân bằng 0.7896. Khi chuyển sang cấu hình âm tính khó hơn \textit{no\_st\_t}, diện tích dưới đường cong ROC giảm còn 0.8228, diện tích dưới đường cong precision-recall còn 0.7667 và độ chính xác cân bằng còn 0.6900.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả phân loại ngoại bộ trên Georgia}
+\label{tab:phase2_georgia_cls}
+\begin{tabular}{p{0.28\linewidth}C{0.14\linewidth}C{0.14\linewidth}C{0.18\linewidth}C{0.14\linewidth}}
+\hline
+\textbf{Cấu hình} & \textbf{Số mẫu} & \textbf{diện tích dưới đường cong ROC} & \textbf{diện tích dưới đường cong precision-recall} & \textbf{Balanced accuracy} \\
+\hline
+\textit{strict\_normal} & 6\,341 & 0.9088 & 0.9600 & 0.7896 \\
+\textit{no\_st\_t} & 10\,327 & 0.8228 & 0.7667 & 0.6900 \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+Hình~\ref{fig:phase2_external_validation} trực quan hóa mức suy giảm hiệu năng khi chuyển từ kiểm tra nội bộ PTB-XL sang hai cấu hình ngoại bộ Georgia. Kết quả này được trình bày trong phần chính vì nó giúp làm rõ ranh giới của mô hình nền: hiệu năng phân loại vẫn hữu ích trên Georgia, nhưng suy giảm rõ khi nhóm âm tính trở nên khó hơn.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.86\linewidth]{figure_phase2_external_validation.png}
+    \caption{So sánh hiệu năng phân loại của mô hình nền giữa PTB-XL nội bộ và hai cấu hình xác thực ngoại bộ Georgia.}
+    \label{fig:phase2_external_validation}
+\end{figure}
+
+\blocksep
+
+Các kết quả trên cho thấy khả năng chuyển miền của mô hình phân loại là hữu ích nhưng chưa đủ mạnh để coi là sẵn sàng triển khai, đặc biệt dưới cấu hình âm tính khó. Đây là một ranh giới cần được giữ đúng khi diễn giải kết quả. Tuy nhiên, sự suy giảm của mô hình phân loại không đồng nghĩa với việc cơ chế tín hiệu bị mất hoàn toàn. Vì vậy, ngoài các chỉ số phân loại, cần xem thêm các kết quả phản thực ngoại bộ.
+
+\blocksep
+
+\subsection{Phản thực ngoại bộ trên Georgia}
+
+\blocksep
+
+Trên dữ liệu Georgia dương tính (4\,595 mẫu dương tính đủ điều kiện trích xuất đặc trưng), phản thực mức đặc trưng của cặp \texttt{st\_segment + t\_wave} cho mức giảm xác suất trung bình 0.5034, với tỷ lệ mẫu có xác suất giảm là 97.19\%. Kết quả này phù hợp với hướng và độ lớn quan sát được trên PTB-XL (0.5240).
+
+\blocksep
+
+Ở mức dạng sóng, chỉnh sửa trực tiếp vùng ST/T trên 4\,596 mẫu dương tính của Georgia (bộ dữ liệu đầy đủ, chưa cân bằng) cho mức giảm xác suất trung bình 0.6032, với khoảng tin cậy 95\% từ 0.5941 đến 0.6139. Tỷ lệ đổi nhãn là khoảng 39.06\%, còn tỷ lệ mẫu có xác suất giảm là khoảng 94.56\%. Tương tự PTB-XL, cửa sổ \texttt{pre-QRS} trên Georgia cũng cho hiệu ứng âm, khoảng $-0.0601$.
+
+\blocksep
+
+Quan trọng hơn, chênh lệch giữa ST/T và cửa sổ \texttt{pre-QRS} trên Georgia vẫn duy trì ở mức khoảng 0.6633, gần tương đương với PTB-XL. Điều này khiến \texttt{pre-QRS} trở thành một đối chứng âm tính lặp lại được trên dữ liệu ngoại bộ: không chỉ hiệu ứng mục tiêu còn giữ, mà chính mẫu hình “ST/T dương mạnh còn pre-QRS âm” cũng được tái lập. Đây là bằng chứng có sức thuyết phục, vì nó cho thấy cơ chế mà mô hình sử dụng vẫn có tính chọn lọc theo vùng tín hiệu khi chuyển miền.
+
+\blocksep
+
+Các kết quả này cho thấy hiệu ứng phản thực ST/T không chỉ xuất hiện trên dữ liệu nội bộ mà còn lặp lại trên dữ liệu ngoại bộ. Dù mô hình phân loại giảm hiệu năng ở cấu hình âm tính khó, cơ chế ST/T mà mô hình sử dụng vẫn cho phản ứng cùng chiều và với độ lớn đáng kể trên Georgia.
+
+\begin{table}[H]
+\centering
+\caption{Tổng hợp phản thực mức đặc trưng và mức dạng sóng trên PTB-XL và Georgia}
+\label{tab:phase2_mechanism_summary}
+\begin{tabular}{p{0.18\linewidth}C{0.14\linewidth}C{0.14\linewidth}C{0.14\linewidth}C{0.14\linewidth}}
+\hline
+\textbf{Bộ dữ liệu} & \shortstack{\textbf{Feature-level}\\\textbf{target drop}} & \shortstack{\textbf{Feature-level}\\\textbf{CCS}} & \shortstack{\textbf{Waveform}\\\textbf{ST/T drop}} & \shortstack{\textbf{Waveform}\\\textbf{pre-QRS drop}} \\
+\hline
+PTB-XL & 0.5240 & 0.3840 & 0.5817 & $-0.0838$ \\
+Georgia & 0.5034 & 0.4100 & 0.6032 & $-0.0601$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent\small{Ghi chú: CCS = mean\_prob\_drop của nhóm mục tiêu trừ nhóm đối chứng tốt nhất. Feature-level Georgia được tính trên toàn bộ 4\,595 mẫu dương tính Georgia; nhóm đối chứng tốt nhất là \texttt{global\_morph + beat\_baseline} với 286 đặc trưng và drop = 0.0934. Kết quả waveform-level được lấy từ báo cáo phản thực dạng sóng đầy đủ trên 4\,596 mẫu dương tính Georgia.}
+
+\subsection{Tổng hợp kết quả cơ chế}
+
+\blocksep
+
+Kết quả tổng hợp cuối của pha nghiên cứu thứ hai cho thấy các điểm sau:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item trên PTB-XL, cặp nhóm mục tiêu \texttt{st\_segment + t\_wave} (247 đặc trưng) cho mức giảm xác suất trung bình 0.5240, trong khi nhóm đối chứng tốt nhất \texttt{global\_morph + beat\_baseline} (286 đặc trưng, lớn hơn nhóm mục tiêu) chỉ cho mức giảm 0.1400; chỉ số CCS đạt 0.3840;
+	\item trên Georgia (4\,595 dương tính), cùng cặp mục tiêu \texttt{st\_segment + t\_wave} cho mức giảm 0.5034 và CCS = 0.4100; nhóm đối chứng tốt nhất \texttt{global\_morph + beat\_baseline} (286 đặc trưng, lớn hơn mục tiêu) chỉ cho 0.0934;
+	\item phản thực dạng sóng ở cả PTB-XL và Georgia đều cho quan hệ liều -- đáp ứng gần đơn điệu;
+	\item đối chứng âm tính \texttt{pre-QRS} đều cho hiệu ứng âm trên cả hai bộ dữ liệu ($-0.0838$ và $-0.0601$).
+\end{itemize}
+
+\blocksep
+
+Nếu xét trong phạm vi bài toán ST/T, các kết quả trên hỗ trợ lẫn nhau khá rõ. Mô hình phân loại nền cho hiệu năng nội bộ tốt. Khi kiểm tra bằng phản thực, cả ở mức đặc trưng lẫn mức dạng sóng, vùng ST/T đều cho hiệu ứng mạnh hơn rõ rệt so với các nhóm và cửa sổ đối chứng. Điểm cần nhấn mạnh là nhóm đối chứng mạnh nhất (\texttt{global\_morph + beat\_baseline}, 286 đặc trưng) thậm chí có số chiều lớn hơn nhóm mục tiêu (247 đặc trưng), nhưng vẫn cho mức giảm thấp hơn 3.74 lần trên PTB-XL và 5.39 lần trên Georgia. Điều này cho thấy tác động phản thực đến từ nội dung sinh lý của vùng ST/T, không phải từ kích thước nhóm. Đặc biệt, việc cửa sổ \texttt{pre-QRS} cho hiệu ứng âm trên cả PTB-XL lẫn Georgia là một bằng chứng mạnh cho thấy mô hình không phản ứng đơn thuần với mọi thao tác chỉnh sửa dạng sóng, mà có tính chọn lọc theo đúng vùng tín hiệu mục tiêu.
+
+\blocksep
+
+Hình~\ref{fig:phase2_validation_layers} cho thấy hiệu ứng phản thực mục tiêu được duy trì nhất quán qua hai lớp kiểm chứng: mức đặc trưng và mức dạng sóng. Kết hợp với kết quả xác thực ngoại bộ và đối chứng âm tính \texttt{pre-QRS}, chuỗi kết quả này tạo nên trục bằng chứng chính cho luận điểm ST/T của khóa luận.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.80\linewidth]{figure_validation_layers.png}
+    \caption{Hiệu ứng phản thực mục tiêu được duy trì nhất quán giữa lớp kiểm chứng mức đặc trưng và mức dạng sóng trên PTB-XL và Georgia.}
+    \label{fig:phase2_validation_layers}
+\end{figure}
+
+\section{Thảo luận chung}
+
+\blocksep
+
+Khi đặt hai pha nghiên cứu cạnh nhau, có thể thấy chúng phục vụ hai mục tiêu khác nhau nhưng bổ sung cho nhau. Pha nghiên cứu thứ nhất cung cấp một lớp phân tầng nguy cơ CAD trực tiếp từ dữ liệu lâm sàng dạng bảng, với ưu điểm là dễ diễn giải và có thể đánh giá ngoài mẫu tương đối rõ. Pha nghiên cứu thứ hai không nhắm trực tiếp vào nhãn CAD, mà cung cấp một lớp phân tích tín hiệu ECG giúp làm rõ cơ chế bất thường ST/T theo hướng có thể kiểm tra được.
+
+\blocksep
+
+Điểm mạnh của pha thứ nhất là tính minh bạch và tính ổn định của \textit{protective score}. Điểm mạnh của pha thứ hai là thiết kế kiểm chứng cơ chế theo nhiều mức, từ đặc trưng đến dạng sóng, từ dữ liệu nội bộ đến dữ liệu ngoại bộ. Nếu chỉ nhìn riêng từng pha, mỗi pha đều có giới hạn. Tuy nhiên, khi đặt trong phạm vi khóa luận, hai pha tạo thành một cấu trúc hợp lý cho bài toán hỗ trợ đánh giá CAD theo hướng đa nguồn dữ liệu.
+
+\blocksep
+
+Cũng cần xác định rõ ranh giới của kết luận. Từ kết quả của pha nghiên cứu thứ nhất, không thể kết luận rằng \textit{protective score} là một thang điểm lâm sàng sẵn sàng thay thế các quy trình chuẩn. Từ kết quả của pha nghiên cứu thứ hai, càng không thể kết luận rằng mô hình ECG có thể chẩn đoán CAD một cách độc lập. Cách diễn giải phù hợp hơn là: pha thứ nhất cung cấp công cụ phân tầng nguy cơ có thể diễn giải, còn pha thứ hai cung cấp bằng chứng cơ chế cho một mô-đun ECG hỗ trợ đánh giá tim mạch.
+
+\section{Tổng kết chương}
+
+\blocksep
+
+Chương này đã trình bày các kết quả thực nghiệm của hai pha nghiên cứu. Đối với pha nghiên cứu thứ nhất, \textit{protective score} cho thấy quan hệ nghịch rõ với nhãn CAD trên cả ba bộ dữ liệu và có giá trị phân tầng nguy cơ ổn định, dù không tạo ra cải thiện lớn về AUC so với mô hình logistic đối chiếu. Đối với pha nghiên cứu thứ hai, mô hình ECG cho hiệu năng nội bộ tốt trên nhiệm vụ \texttt{NORM vs STTC}; quan trọng hơn, các thí nghiệm phản thực ở mức đặc trưng và mức dạng sóng đều chỉ ra vai trò nổi bật của cơ chế ST/T. Đặc biệt, nhóm mục tiêu \texttt{st\_segment + t\_wave} (247 đặc trưng) cho hiệu ứng phản thực lớn hơn 3.74 lần so với nhóm đối chứng tốt nhất có kích thước lớn hơn (286 đặc trưng), loại trừ khả năng hiệu ứng chỉ đến từ chênh lệch kích thước nhóm. Hiệu ứng này còn lặp lại trên dữ liệu Georgia ngoại bộ.
+
+\blocksep
+
+Từ các kết quả trên, có thể rút ra rằng hướng tiếp cận hai pha của khóa luận là khả thi trong phạm vi bài toán hỗ trợ đánh giá CAD. Pha thứ nhất tạo ra một lớp tri thức lâm sàng dễ diễn giải, còn pha thứ hai tạo ra một lớp bằng chứng tín hiệu có thể kiểm tra. Trên cơ sở đó, chương tiếp theo sẽ tổng kết các kết quả chính của khóa luận, chỉ ra các giới hạn còn tồn tại và nêu một số hướng phát triển tiếp theo.

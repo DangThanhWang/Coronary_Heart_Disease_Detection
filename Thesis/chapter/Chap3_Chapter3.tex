@@ -1,0 +1,367 @@
+\clearpage
+\phantomsection
+
+\setcounter{chapter}{2}
+\chapter[{MÔ-ĐUN KIỂM CHỨNG CƠ CHẾ ST/T TRÊN ECG BẰNG BỘ NHỚ NGUYÊN MẪU PHẢN THỰC}]{Mô-đun kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực}
+
+Chương này trình bày mô-đun kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực, tương ứng với pha nghiên cứu thứ hai của khóa luận. Nếu pha nghiên cứu thứ nhất tập trung vào dữ liệu lâm sàng dạng bảng để phân tầng nguy cơ CAD, thì pha nghiên cứu thứ hai tập trung vào dữ liệu ECG 12 chuyển đạo để phân tích một cơ chế tín hiệu cụ thể là bất thường ST/T. Mục tiêu của pha này là kiểm tra xem mô hình có thực sự dựa vào vùng tín hiệu ST/T khi đưa ra dự đoán hay không, đồng thời đánh giá mức độ nhất quán của cơ chế đó trên dữ liệu ngoại bộ.
+
+\blocksep
+
+Thay vì sử dụng trực tiếp một mô hình học sâu trên tín hiệu thô, pha nghiên cứu thứ hai lựa chọn biểu diễn ECG dưới dạng tập đặc trưng có cấu trúc và sử dụng một mô hình nền tương đối đơn giản để triển khai các thí nghiệm phản thực. Cách làm này thuận lợi cho việc phân tích cơ chế, vì có thể kiểm tra trực tiếp ảnh hưởng của từng nhóm tín hiệu thay vì chỉ quan sát các bản đồ chú ý hoặc điểm quan trọng của đặc trưng.
+
+\blocksep
+
+Trong phạm vi khóa luận, kết quả của pha nghiên cứu thứ hai không được diễn giải như một hệ thống chẩn đoán CAD chỉ từ ECG. Thay vào đó, pha này được xem như một thành phần bổ trợ nhằm làm rõ vai trò của cơ chế ST/T như một tín hiệu có ý nghĩa lâm sàng đối với đánh giá tim mạch.
+
+\section{Bài toán và định hướng phương pháp}
+
+\blocksep
+
+Trong pha nghiên cứu thứ hai, bài toán chính được xây dựng trên nhiệm vụ phân biệt giữa điện tâm đồ bình thường và điện tâm đồ có bất thường ST/T. Trên dữ liệu PTB-XL, nhiệm vụ này được triển khai dưới dạng \texttt{NORM vs STTC}. Đây là một lựa chọn có chủ đích. Nếu sử dụng một nhãn bệnh quá rộng, mô hình có thể đạt hiệu năng phân loại nhất định nhưng khó xác định rõ đang dựa vào thành phần tín hiệu nào. Ngược lại, khi giới hạn bài toán vào nhóm bất thường ST/T, việc phân tích cơ chế trở nên cụ thể hơn và phù hợp hơn với các thí nghiệm phản thực ở các bước sau.
+
+\blocksep
+
+Ý tưởng chung của phương pháp được triển khai theo hai mức. Trước hết, xây dựng một mô hình phân loại trên các đặc trưng ECG 12 chuyển đạo. Sau đó, thay vì chỉ dừng ở việc báo cáo AUC hay độ chính xác cân bằng, tiến hành kiểm tra trực tiếp tác động của các nhóm đặc trưng liên quan đến ST/T ở hai mức: ở mức đặc trưng, thay thế một nhóm đặc trưng của ca bất thường bằng giá trị từ một nguyên mẫu bình thường gần nhất; ở mức dạng sóng, chỉnh sửa trực tiếp vùng ST/T trên tín hiệu ECG, sau đó trích xuất lại đặc trưng và đánh giá phản ứng của mô hình.
+
+\blocksep
+
+Thiết kế này cho phép trả lời hai câu hỏi. Thứ nhất, trong không gian đặc trưng, nhóm tín hiệu nào làm thay đổi mạnh nhất dự đoán của mô hình. Thứ hai, khi quay lại mức dạng sóng, hiệu ứng đó có còn được duy trì hay không. Nếu hiệu ứng ổn định ở cả hai mức, kết luận về cơ chế sẽ có cơ sở hơn so với việc chỉ sử dụng các phương pháp hậu giải thích thông thường.
+
+\blocksep
+
+Toàn bộ quy trình của pha nghiên cứu thứ hai được tóm tắt trong Hình~\ref{fig:phase2_pipeline}. So với pha nghiên cứu thứ nhất, cấu trúc của pha này nhấn mạnh vào lớp kiểm chứng cơ chế, trong đó mô hình phân loại đóng vai trò nền cho các phép thử phản thực, đối chứng âm tính và xác thực ngoại bộ.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figure_phase2_pipeline.png}
+    \caption{Pipeline tổng thể của pha nghiên cứu thứ hai với các lớp kiểm chứng cơ chế từ mức đặc trưng đến mức dạng sóng và xác thực ngoại bộ.}
+    \label{fig:phase2_pipeline}
+\end{figure}
+
+\section{Dữ liệu sử dụng}
+
+\blocksep
+
+\subsection{Dữ liệu PTB-XL}
+
+\blocksep
+
+Dữ liệu chính của pha nghiên cứu thứ hai là PTB-XL \cite{Wagner2020} sau khi được chuẩn bị về định dạng CSV 12 chuyển đạo trong nghiên cứu. Theo cách tổ chức của quy trình thực nghiệm, dữ liệu được chia thành ba tập: huấn luyện, xác thực và kiểm tra. Chỉ các mẫu thuộc hai nhóm \texttt{NORM} và \texttt{STTC} mới được sử dụng trong nhiệm vụ chính.
+
+\blocksep
+
+Quy mô dữ liệu cho nhiệm vụ \texttt{NORM vs STTC} gồm 8\,603 mẫu huấn luyện, 1\,116 mẫu xác thực và 1\,082 mẫu kiểm tra, trong đó có 213 mẫu dương tính trong tập kiểm tra.
+
+\blocksep
+
+Trong đó, nhãn 0 tương ứng với nhóm bình thường và nhãn 1 tương ứng với nhóm ST/T bất thường. Cách gán nhãn này được sử dụng nhất quán trong toàn bộ các thí nghiệm chính của pha nghiên cứu thứ hai.
+
+\blocksep
+
+\subsection{Dữ liệu Georgia ngoại bộ}
+
+\blocksep
+
+Để đánh giá mức độ nhất quán của mô hình trên dữ liệu độc lập, nghiên cứu sử dụng thêm bộ dữ liệu Georgia từ PhysioNet Challenge 2020 \cite{Alday2021}. Dữ liệu này được ánh xạ về cùng bài toán ST/T với hai cách chọn mẫu âm tính: \textit{strict\_normal}, chỉ giữ các bản ghi bình thường nghiêm ngặt làm âm tính; và \textit{no\_st\_t}, giữ toàn bộ các bản ghi không mang mã ST/T làm âm tính.
+
+\blocksep
+
+Thiết lập thứ nhất giúp đánh giá trong điều kiện âm tính tương đối “sạch”. Thiết lập thứ hai khó hơn, vì các mẫu âm tính vẫn có thể chứa nhiều bất thường khác ngoài ST/T. Việc sử dụng đồng thời hai cấu hình này giúp tách bạch giữa hiệu năng phân loại và mức độ ổn định của cơ chế tín hiệu khi chuyển miền.
+
+\section{Trích xuất đặc trưng ECG}
+
+\blocksep
+
+\subsection{Nguyên tắc chung}
+
+\blocksep
+
+Trong pha nghiên cứu thứ hai, tín hiệu ECG không được đưa trực tiếp vào một mô hình học sâu đầu-cuối. Thay vào đó, từ mỗi bản ghi ECG 12 chuyển đạo, nghiên cứu trích xuất một vector đặc trưng cố định kích thước. Cách biểu diễn này thuận tiện cho ba mục đích: huấn luyện mô hình phân loại nền, tổ chức đặc trưng theo các nhóm có ý nghĩa lâm sàng và xây dựng phản thực trên từng nhóm đặc trưng.
+
+\blocksep
+
+Theo kết quả tổng hợp, vector đặc trưng cuối cùng có 799 chiều. Đây là đầu vào trực tiếp của mô hình phân loại chính trong các thí nghiệm nội bộ và ngoại bộ.
+
+\blocksep
+
+\subsection{Quy trình trích xuất đặc trưng}
+
+\blocksep
+
+Quá trình trích xuất đặc trưng từ tín hiệu ECG thô bao gồm ba bước chính. Bước đầu tiên là phát hiện đỉnh R. Tín hiệu từ chuyển đạo II được lọc qua bộ lọc thông dải 0.5--40\,Hz để loại nhiễu đường cơ và nhiễu tần số cao, sau đó tính đạo hàm bậc nhất và bình phương để tăng cường độ nhọn của đỉnh. Đỉnh R được xác định bằng thuật toán phát hiện đỉnh cục bộ trên tín hiệu tích phân cửa sổ trượt, với điều kiện khoảng cách tối thiểu tương ứng với 0.25 giây (25 mẫu tại 100\,Hz) và ngưỡng biên độ lấy theo bách phân vị 85 của tín hiệu tích phân. Các đỉnh bất thường với khoảng R-R ngoài dải 0.3--2.0 giây được loại bỏ.
+
+\blocksep
+
+Bước thứ hai là cắt và căn chỉnh nhịp tim. Với mỗi đỉnh R được phát hiện, một cửa sổ cố định gồm \texttt{pre = 80} mẫu trước và \texttt{post = 120} mẫu sau được trích ra, tương ứng tổng cộng 200 mẫu (2 giây tại tần số lấy mẫu 100\,Hz). Trên tất cả 12 chuyển đạo, trung vị cửa sổ qua các đỉnh R được tính để xây dựng \textit{nhịp tim trung vị} đại diện cho bản ghi. Cách lấy trung vị thay vì trung bình giúp giảm ảnh hưởng của các nhịp ngoại lệ hoặc artefact.
+
+\blocksep
+
+Bước thứ ba là trích xuất hai loại đặc trưng từ nhịp tim trung vị. Loại thứ nhất là \textit{thống kê vùng đoạn}: với mỗi vùng sinh lý (P, PR, QRS, ST, T), nghiên cứu tính bốn thống kê cơ bản là giá trị trung bình, độ lệch chuẩn, giá trị nhỏ nhất và lớn nhất trên mỗi trong số 12 chuyển đạo. Loại thứ hai là \textit{điểm hình dạng dạng sóng}: nhịp tim trung vị trên từng chuyển đạo được giảm mẫu xuống 32 điểm để lưu lại hình dạng tổng thể của sóng, độc lập với chiều dài thực tế của bản ghi. Mỗi điểm hình dạng sau đó được gán vào đúng vùng sinh lý tương ứng dựa trên vị trí của nó trong cửa sổ beat, tạo cơ sở cho bước gom nhóm lâm sàng tiếp theo. Toàn bộ đặc trưng được ghép nối trên 12 chuyển đạo, tạo thành vector đặc trưng 799 chiều. Để bảo đảm cùng định dạng trích xuất giữa PTB-XL và Georgia, cả hai bộ dữ liệu đều được lấy mẫu lại về tần số 100\,Hz trước khi đưa vào quy trình trên.
+
+\blocksep
+
+\subsection{Gom đặc trưng theo nhóm lâm sàng}
+
+\blocksep
+
+Một thành phần quan trọng của pha nghiên cứu thứ hai là bước gom đặc trưng. Thay vì xem 799 chiều đặc trưng như một tập không cấu trúc, nghiên cứu chia chúng thành các nhóm tương ứng với các thành phần tín hiệu ECG. Cụ thể, mỗi điểm mẫu dạng sóng trên nhịp tim trung vị (sau khi giảm mẫu xuống 32 điểm mỗi chuyển đạo) được gán vào đúng vùng sinh lý tương ứng dựa trên vị trí của nó trong cửa sổ beat, thay vì gom toàn bộ vào một nhóm chung. Các nhóm chính gồm:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item \texttt{rhythm} (6 đặc trưng);
+	\item \texttt{p\_wave} (91 đặc trưng: 65 thống kê phân đoạn + 26 điểm dạng sóng vùng P);
+	\item \texttt{pr\_segment} (65 đặc trưng);
+	\item \texttt{qrs} (104 đặc trưng: 65 thống kê + 39 điểm dạng sóng vùng QRS);
+	\item \texttt{st\_segment} (104 đặc trưng: 65 thống kê + 39 điểm dạng sóng vùng ST);
+	\item \texttt{t\_wave} (143 đặc trưng: 65 thống kê + 78 điểm dạng sóng vùng T);
+	\item \texttt{global\_morph} (52 đặc trưng);
+	\item \texttt{beat\_baseline} (234 đặc trưng: các điểm dạng sóng thuộc vùng nền trước P và sau T).
+\end{itemize}
+
+\blocksep
+
+Trong đó, \texttt{st\_segment} và \texttt{t\_wave} là hai nhóm được quan tâm nhiều nhất trong nhiệm vụ ST/T. Các nhóm sinh lý chính như \texttt{p\_wave}, \texttt{qrs}, \texttt{st\_segment} và \texttt{t\_wave} có kích thước cùng bậc (91--143 đặc trưng), trong khi các nhóm phụ như \texttt{rhythm}, \texttt{global\_morph} và \texttt{beat\_baseline} nhỏ hơn hoặc lớn hơn đáng kể. Cách gom này cho phép xây dựng cả các nhóm đối chứng gần tương đương lẫn các nhóm đối chứng lớn hơn nhóm mục tiêu, nhờ đó việc so sánh hiệu ứng phản thực không phụ thuộc đơn thuần vào số chiều đặc trưng. Các số đặc trưng trên phản ánh 13 kênh tín hiệu đầu vào (không phải 12): sau khi chuẩn bị dữ liệu, file CSV đầu vào gồm 12 cột \texttt{Lead\_*} từ PTB-XL kết hợp với cột \texttt{Voltage} được giữ lại từ nguồn đơn chuyển đạo gốc, đưa tổng số kênh đầu vào lên 13 ($6 + 13 \times 61 = 799$).
+
+\blocksep
+
+Cách gom nhóm này có ý nghĩa thực tế đối với khóa luận. Thay vì diễn giải mức đóng góp của hàng trăm chiều đặc trưng riêng lẻ, người viết có thể thảo luận ở mức gần hơn với trực giác lâm sàng, chẳng hạn như đoạn ST, sóng T, phức bộ QRS hay hình dạng sóng.
+
+\section{Mô hình phân loại nền}
+
+\blocksep
+
+Mô hình chính được sử dụng trong pha nghiên cứu thứ hai là \texttt{HistGradient\discretionary{}{}{}Boosting\discretionary{}{}{}Classifier}. Đây là mô hình nền được dùng trong các thí nghiệm chính và trong báo cáo kết quả cuối cùng của nghiên cứu. Việc lựa chọn mô hình này có ba ưu điểm: xử lý tốt quan hệ phi tuyến giữa các đặc trưng ECG, thời gian huấn luyện và suy luận tương đối gọn, và thuận lợi cho việc xây dựng các phép thử phản thực trên không gian đặc trưng.
+
+\blocksep
+
+Ngưỡng phân loại không được cố định ở 0.5 mà được chọn trên tập xác thực bằng cách tối đa hóa chỉ số Youden. Sau khi xác định ngưỡng, cùng một ngưỡng này được sử dụng cho tập kiểm tra nội bộ và các phép đánh giá ngoại bộ. Điều này giúp việc so sánh kết quả giữa các bước đánh giá nhất quán hơn.
+
+\blocksep
+
+Về mặt công thức, nếu gọi $Se(t)$ là độ nhạy và $Sp(t)$ là độ đặc hiệu tại ngưỡng $t$, thì chỉ số Youden được viết:
+\[
+J(t) = Se(t) + Sp(t) - 1.
+\]
+Ngưỡng được chọn là giá trị $t^\star$ làm cực đại $J(t)$ trên tập xác thực.
+
+\blocksep
+
+Trong khóa luận này, hiệu năng phân loại của mô hình chỉ là một phần của đánh giá. Giá trị chính của pha nghiên cứu thứ hai không nằm ở việc huấn luyện một mô hình phân loại ST/T đơn thuần, mà ở việc sử dụng mô hình đó như một nền tảng để kiểm tra cơ chế tín hiệu.
+
+\section{Bộ nhớ nguyên mẫu phản thực}
+
+\blocksep
+
+\subsection{Nguyên tắc xây dựng}
+
+\blocksep
+
+Thành phần đặc trưng nhất của pha nghiên cứu thứ hai là bộ nhớ nguyên mẫu phản thực. Ý tưởng của thành phần này là lưu trữ một số nguyên mẫu đại diện cho từng lớp trong không gian đặc trưng đã chuẩn hóa. Khi cần xây dựng phản thực cho một mẫu dương tính, hệ thống sẽ tìm nguyên mẫu bình thường gần nhất và dùng nguyên mẫu đó như một đích thay thế.
+
+\blocksep
+
+Trong quy trình thực nghiệm, bộ nhớ này được xây dựng bằng cách chuẩn hóa dữ liệu bằng \texttt{StandardScaler}, sau đó gom cụm các mẫu trong từng lớp bằng \texttt{KMeans}. Với mỗi cụm, một mẫu gần tâm cụm nhất được chọn làm mẫu đại diện và được đưa vào bộ nhớ. Nhờ vậy, bộ nhớ không phải lưu toàn bộ dữ liệu huấn luyện nhưng vẫn giữ được các kiểu hình đại diện của từng lớp.
+
+\blocksep
+
+\subsection{Vai trò trong các thí nghiệm phản thực}
+
+\blocksep
+
+Bộ nhớ nguyên mẫu phản thực được sử dụng trong hầu hết các thí nghiệm chính của pha nghiên cứu thứ hai. Với mỗi mẫu dương tính, nghiên cứu tìm nguyên mẫu âm tính gần nhất trong bộ nhớ. Sau đó, các nhóm đặc trưng mục tiêu của mẫu gốc được thay thế dần bằng các giá trị tương ứng từ nguyên mẫu này. Về trực giác, đây là cách xây dựng một phiên bản “gần bình thường hơn” của chính mẫu bệnh, nhưng sự thay đổi chỉ diễn ra trên nhóm đặc trưng đang được kiểm tra.
+
+\blocksep
+
+Cách làm này hợp lý hơn so với việc thay đặc trưng bằng giá trị trung bình toàn cục, vì nguyên mẫu được lấy từ các trường hợp thật trong dữ liệu huấn luyện. Do đó, phản thực tạo ra vẫn gần với phân bố quan sát được trong thực tế hơn.
+
+\section{Phản thực mức đặc trưng}
+
+\blocksep
+
+\subsection{Cách xây dựng phản thực}
+
+\blocksep
+
+Gọi $\mathbf{x}$ là vector đặc trưng của một mẫu dương tính, $\mathbf{p}$ là nguyên mẫu bình thường gần nhất và $G$ là tập cột thuộc nhóm đặc trưng cần can thiệp. Khi đó, phản thực được tạo bằng cách thay các cột trong $G$ của $\mathbf{x}$ bằng giá trị từ $\mathbf{p}$. Trong trường hợp tổng quát, nghiên cứu còn cho phép điều chỉnh cường độ thay thế bằng một hệ số $\alpha \in [0,1]$:
+\[
+x^{cf}_j =
+\begin{cases}
+(1-\alpha)x_j + \alpha p_j, & \text{nếu } j \in G,\\
+x_j, & \text{nếu } j \notin G.
+\end{cases}
+\]
+
+\blocksep
+
+Khi $\alpha = 1$, nhóm đặc trưng mục tiêu được thay hoàn toàn. Khi $\alpha$ tăng dần từ 0 đến 1, có thể kiểm tra được quan hệ liều -- đáp ứng của mô hình.
+
+\blocksep
+
+\subsection{Nhóm mục tiêu}
+
+\blocksep
+
+Đối với nhiệm vụ \texttt{NORM vs STTC}, nhóm mục tiêu chính trong các báo cáo cuối là cặp \texttt{st\_segment + t\_wave} (247 đặc trưng). Đây là cặp bao phủ toàn bộ thông tin ST và T ở cả mức thống kê phân đoạn lẫn mức hình dạng sóng. Ngoài ra, nghiên cứu còn thử các nhóm đơn lẻ và các cặp nhóm khác để làm đối chứng.
+
+\blocksep
+
+Ý nghĩa của bước này là xác định xem khi thay đúng nhóm đặc trưng liên quan đến ST/T, xác suất dự đoán dương tính có giảm mạnh hơn các nhóm khác hay không. Vì trong tập đối chứng có cả những nhóm gần tương đương và những nhóm thậm chí lớn hơn nhóm mục tiêu, hiệu ứng vượt trội của nhóm mục tiêu không thể được giải thích đơn thuần bởi sự chênh lệch về số chiều đặc trưng.
+
+\blocksep
+
+\subsection{Các độ đo sử dụng}
+
+\blocksep
+
+Từ phản thực mức đặc trưng, nghiên cứu tính các độ đo sau:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item \textit{mean probability drop}: mức giảm xác suất trung bình;
+	\item \textit{median probability drop}: trung vị mức giảm xác suất;
+	\item \textit{flip rate}: tỷ lệ mẫu đổi từ dương sang âm sau phản thực;
+	\item \textit{positive drop rate}: tỷ lệ mẫu có xác suất giảm;
+	\item \textit{chỉ số nhất quán phản thực}: chênh lệch giữa nhóm mục tiêu và nhóm đối chứng tốt nhất.
+\end{itemize}
+
+\blocksep
+
+Các độ đo này được sử dụng nhất quán trong các báo cáo cuối của pha nghiên cứu thứ hai, cả trên PTB-XL nội bộ lẫn trên Georgia ngoại bộ.
+
+\section{Phản thực mức dạng sóng}
+
+\blocksep
+
+\subsection{Động cơ}
+
+\blocksep
+
+Phản thực mức đặc trưng vẫn là phản thực trong không gian biểu diễn. Vì vậy, pha nghiên cứu thứ hai thực hiện thêm một bước kiểm tra mạnh hơn: chỉnh sửa trực tiếp vùng ST/T trên dạng sóng ECG. Sau khi chỉnh sửa, đặc trưng được trích xuất lại từ dạng sóng mới và đưa trở lại vào mô hình.
+
+\blocksep
+
+Nếu mô hình vẫn phản ứng mạnh theo cùng chiều như ở mức đặc trưng, điều đó cho thấy kết luận không chỉ là một hiện tượng của không gian đặc trưng đã trích xuất, mà còn gắn với một thay đổi có ý nghĩa trên tín hiệu gốc.
+
+\blocksep
+
+\subsection{Cửa sổ mục tiêu và cửa sổ đối chứng}
+
+\blocksep
+
+Trong thí nghiệm dạng sóng, cửa sổ mục tiêu là vùng \texttt{ST/T}. Bên cạnh đó, nghiên cứu còn xây dựng các cửa sổ đối chứng như \texttt{pre-QRS}, \texttt{P/PR} và \texttt{QRS}. Các cửa sổ này đóng vai trò đối chứng âm tính.
+
+\blocksep
+
+Nếu mô hình thực sự đang dựa vào vùng ST/T, thì việc chỉnh sửa ST/T phải tạo ra mức giảm xác suất lớn hơn rõ rệt so với việc chỉnh sửa các cửa sổ đối chứng. Đây là nguyên tắc được dùng xuyên suốt trong các thí nghiệm phản thực ở mức dạng sóng.
+
+\blocksep
+
+Nếu gọi $s(t)$ là tín hiệu gốc, $\tilde{s}(t)$ là dạng sóng mục tiêu lấy từ nguyên mẫu bình thường, $W$ là cửa sổ can thiệp và $r(t) \in [0,1]$ là hàm làm trơn ở biên cửa sổ, thì phép chỉnh sửa mức dạng sóng có thể viết khái quát:
+\[
+s^{cf}(t) =
+\begin{cases}
+\left(1-\alpha r(t)\right)s(t) + \alpha r(t)\tilde{s}(t), & t \in W,\\
+s(t), & t \notin W.
+\end{cases}
+\]
+Viết như vậy cho thấy nghiên cứu không thay toàn bộ tín hiệu ECG, mà chỉ tác động cục bộ lên đúng vùng đang được kiểm tra.
+
+\blocksep
+
+\subsection{Thay đổi dần mức can thiệp và quan hệ liều - đáp ứng}
+
+\blocksep
+
+Một điểm đáng chú ý trong pha nghiên cứu thứ hai là nghiên cứu không chỉ kiểm tra phản thực hoàn toàn, mà còn thực hiện thay đổi dần tham số \(\alpha\). Với các giá trị $\alpha$ tăng dần từ 0 đến 1, mức can thiệp vào vùng ST/T cũng tăng dần. Sau mỗi mức can thiệp, nghiên cứu đo lại xác suất dự đoán và tỷ lệ đổi nhãn.
+
+\blocksep
+
+Nếu mức giảm xác suất và tỷ lệ đổi nhãn tăng dần theo $\alpha$, có thể xem đây là một dạng quan hệ liều -- đáp ứng. Trong ngữ cảnh của khóa luận, đây là một kiểm tra cần thiết để bảo đảm mô hình không chỉ phản ứng với một phép chỉnh sửa đơn lẻ.
+
+\section{Xác thực ngoại bộ}
+
+\blocksep
+
+Sau khi hoàn thành các thí nghiệm trên PTB-XL, nghiên cứu đánh giá lại mô hình trên dữ liệu Georgia. Mục đích của bước này là kiểm tra hai vấn đề riêng biệt: liệu hiệu năng phân loại có còn được duy trì khi chuyển sang dữ liệu ngoài miền huấn luyện hay không, và liệu cơ chế ST/T có còn cho phản ứng phản thực cùng chiều trên dữ liệu ngoại bộ hay không.
+
+\blocksep
+
+Hai câu hỏi trên không hoàn toàn đồng nhất. Một mô hình có thể giảm hiệu năng khi chuyển miền, nhất là dưới thiết lập âm tính khó, nhưng cơ chế phản thực ST/T vẫn giữ được tính nhất quán. Vì vậy, trong pha nghiên cứu thứ hai, phần xác thực ngoại bộ không chỉ nhằm kiểm tra mô hình phân loại, mà còn nhằm kiểm tra cơ chế tín hiệu.
+
+\section{Thiết kế đánh giá}
+
+\blocksep
+
+\subsection{Các độ đo phân loại}
+
+\blocksep
+
+Pha nghiên cứu thứ hai sử dụng các chỉ số phân loại cơ bản: diện tích dưới đường cong ROC, diện tích dưới đường cong precision-recall, độ chính xác cân bằng và F1 vĩ mô.
+
+\blocksep
+
+Các chỉ số này được dùng để mô tả mức phân biệt của mô hình trên dữ liệu nội bộ và ngoại bộ. Tuy nhiên, chúng không phải là cơ sở duy nhất để kết luận về giá trị của phương pháp.
+
+\blocksep
+
+\subsection{Các độ đo cơ chế}
+
+\blocksep
+
+Để đánh giá phần cơ chế, nghiên cứu sử dụng các nhóm độ đo sau:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item mean probability drop của nhóm mục tiêu;
+	\item flip rate của phản thực;
+	\item chênh lệch giữa nhóm mục tiêu và nhóm đối chứng tốt nhất;
+	\item tính đơn điệu của quá trình thay đổi dần tham số \(\alpha\);
+	\item mức độ lặp lại của hiệu ứng trên Georgia ngoại bộ.
+\end{itemize}
+
+\blocksep
+
+Những độ đo này được tổng hợp trong các báo cáo kết quả cuối cùng của nghiên cứu.
+
+\blocksep
+
+Trong đó, chỉ số nhất quán phản thực được dùng xuyên suốt trong các báo cáo cuối có thể viết ngắn gọn dưới dạng:
+\[
+\mathrm{CCS} = \overline{\Delta p}_{\mathrm{target}} - \overline{\Delta p}_{\mathrm{best\ control}},
+\]
+với $\overline{\Delta p}_{\mathrm{target}}$ là mức giảm xác suất trung bình khi can thiệp lên nhóm mục tiêu, còn $\overline{\Delta p}_{\mathrm{best\ control}}$ là mức giảm xác suất trung bình của nhóm đối chứng không-ST/T mạnh nhất. Giá trị CCS càng lớn thì bằng chứng cho thấy mô hình dựa chọn lọc vào cơ chế ST/T càng mạnh.
+
+\blocksep
+
+\subsection{Ranh giới của kết luận}
+
+\blocksep
+
+Một điểm cần làm rõ trong chương này là ranh giới của kết luận phương pháp. Pha nghiên cứu thứ hai không nhằm chứng minh quan hệ nhân quả sinh lý tuyệt đối giữa ST/T và CAD. Tương tự, pha này cũng không nhằm xây dựng một hệ thống ECG đủ cơ sở để kết luận chẩn đoán CAD chỉ từ một bản ghi điện tâm đồ. Cách diễn giải phù hợp hơn là: mô hình trong pha nghiên cứu thứ hai học được một cơ chế ST/T có thể kiểm tra bằng phản thực, và cơ chế này còn giữ được tính nhất quán ở mức nhất định trên dữ liệu ngoại bộ.
+
+\section{Thảo luận phương pháp}
+
+\blocksep
+
+Ưu điểm chính của cách tiếp cận trong pha nghiên cứu thứ hai là tính cụ thể. Nghiên cứu không cố gắng giải thích một mô hình quá phức tạp bằng các công cụ hậu nghiệm chung chung, mà thiết kế ngay từ đầu một quy trình phù hợp cho việc kiểm tra cơ chế. Việc sử dụng đặc trưng có cấu trúc, gom nhóm theo ý nghĩa lâm sàng và kết hợp với bộ nhớ nguyên mẫu phản thực giúp các thí nghiệm phản thực có thể diễn giải rõ ràng hơn.
+
+\blocksep
+
+Một ưu điểm khác là đánh giá được tổ chức thành nhiều lớp. Ngoài hiệu năng phân loại, nghiên cứu còn kiểm tra phản thực ở mức đặc trưng, phản thực ở mức dạng sóng, đối chứng âm tính và dữ liệu ngoại bộ. Cách đánh giá này chặt chẽ hơn so với việc chỉ báo cáo một vài chỉ số hiệu năng rồi gắn thêm một biểu đồ giải thích.
+
+\blocksep
+
+Tuy nhiên, phương pháp cũng có một số giới hạn. Trước hết, nhãn chính của pha nghiên cứu thứ hai là ST/T bất thường, không phải CAD xác định. Thứ hai, phản thực được xây dựng từ các nguyên mẫu trong không gian đặc trưng nên vẫn phụ thuộc vào cách biểu diễn dữ liệu. Thứ ba, hiệu năng ngoại bộ của mô hình phân loại có thể giảm rõ khi chuyển sang thiết lập âm tính khó. Vì vậy, đóng góp của pha nghiên cứu này nên được hiểu chủ yếu ở mức kiểm chứng cơ chế tín hiệu, không nên mở rộng quá mức sang kết luận triển khai lâm sàng trực tiếp.
+
+\section{Tổng kết chương}
+
+\blocksep
+
+Chương này đã trình bày phương pháp của pha nghiên cứu thứ hai. Trọng tâm của chương là mô tả cách xây dựng mô hình ECG cho nhiệm vụ \texttt{NORM vs STTC}, cách tổ chức đặc trưng theo các nhóm lâm sàng, cơ chế bộ nhớ nguyên mẫu phản thực, cũng như hai lớp phản thực ở mức đặc trưng và mức dạng sóng.
+
+\blocksep
+
+Trên cơ sở đó, pha nghiên cứu thứ hai được định vị như một mô-đun kiểm chứng cơ chế ST/T trên ECG phục vụ bài toán đánh giá CAD trong toàn khóa luận. Giá trị chính của pha này không nằm ở việc thay thế chẩn đoán lâm sàng, mà ở việc cung cấp một cách kiểm tra tương đối cụ thể xem mô hình đang dựa vào cơ chế ST/T đến mức nào. Các kết quả thực nghiệm tương ứng sẽ được trình bày trong Chương~4.

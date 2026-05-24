@@ -1,0 +1,96 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{{Mở đầu}}
+\chapter*{\Large \textbf{Mở đầu}}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+\renewcommand{\thefigure}{0.\arabic{figure}}
+\renewcommand{\thetable}{0.\arabic{table}}
+\noindent{\Large \textbf{Lý do chọn đề tài}}
+
+\blocksep
+
+Bệnh động mạch vành là một trong những nhóm bệnh có tỷ lệ mắc và tử vong cao trên thế giới \cite{Libby2011}. Trong thực hành lâm sàng, việc đánh giá sớm nguy cơ bệnh có ý nghĩa quan trọng đối với sàng lọc, chỉ định cận lâm sàng và theo dõi người bệnh. Tuy nhiên, quá trình đánh giá này thường không thể dựa trên một nguồn thông tin đơn lẻ, mà cần tổng hợp đồng thời đặc điểm lâm sàng, yếu tố nguy cơ nền, kết quả xét nghiệm và tín hiệu điện tâm đồ. Một số nghiên cứu dịch tễ học xác nhận rằng bất thường ST/T trên ECG mang giá trị dự đoán bổ sung độc lập so với điểm nguy cơ lâm sàng dạng Framingham score \cite{StromMoller2007, Badheka2013, Muccini2021}, cho thấy hai nguồn thông tin này phản ánh hai khía cạnh bổ sung nhau trong đánh giá nguy cơ tim mạch. Từ đó đặt ra nhu cầu xây dựng các công cụ hỗ trợ có khả năng khai thác nhiều nguồn dữ liệu nhưng vẫn bảo đảm tính dễ hiểu và khả năng kiểm tra về mặt chuyên môn.
+
+\blocksep
+
+Trong những năm gần đây, học máy cho thấy tiềm năng rõ rệt trong hỗ trợ chẩn đoán và đánh giá nguy cơ trong y sinh \cite{Krittanawong2017}. Với dữ liệu lâm sàng dạng bảng, các phương pháp học máy có thể giúp phát hiện những mối liên hệ khó nhận ra bằng quan sát trực tiếp, qua đó hỗ trợ xây dựng các thang điểm phân tầng nguy cơ có cơ sở dữ liệu rõ ràng hơn. Với dữ liệu điện tâm đồ, các phương pháp phân tích tự động có thể góp phần nhận diện các bất thường điện học liên quan đến nguy cơ tim mạch, đặc biệt trong các tình huống cần xử lý số lượng lớn bản ghi.
+
+\blocksep
+
+Mặc dù vậy, nhiều hướng tiếp cận hiện nay vẫn còn những hạn chế đáng chú ý. Một số mô hình đạt hiệu năng tốt nhưng khó diễn giải, nên chưa thật sự thuận lợi khi áp dụng trong môi trường lâm sàng đòi hỏi tính minh bạch cao \cite{Lipton2018, Rudin2019}. Nhiều nghiên cứu cũng chỉ tập trung vào một nguồn dữ liệu riêng lẻ, trong khi việc đánh giá bệnh động mạch vành trên thực tế thường cần kết hợp cả dữ liệu lâm sàng và tín hiệu sinh học. Bên cạnh đó, với dữ liệu ECG, không ít mô hình mới dừng ở mức dự đoán nhãn mà chưa làm rõ được thành phần tín hiệu nào đang chi phối quyết định của mô hình.
+
+\blocksep
+
+Từ bối cảnh trên, khóa luận tiếp cận bài toán dưới góc nhìn \textit{hệ thống hỗ trợ đánh giá bệnh động mạch vành đa nguồn dữ liệu}. Trên nền tảng đó, khóa luận đề xuất một framework tổng thể và tập trung hiện thực hai thành phần phân tích cốt lõi: thành phần phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và \textit{protective score}, cùng thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực. Nội dung nghiên cứu được tổ chức thành hai pha bổ sung cho nhau. Pha thứ nhất khai thác dữ liệu lâm sàng dạng bảng để phân tầng nguy cơ CAD và rút ra các luật có khả năng diễn giải. Pha thứ hai khai thác dữ liệu ECG 12 chuyển đạo để phân tích và kiểm chứng cơ chế bất thường ST/T như một nguồn bằng chứng tín hiệu hỗ trợ cho đánh giá nguy cơ tim mạch liên quan đến CAD. Cách tổ chức này phù hợp với thực tế lâm sàng, nơi quyết định đánh giá người bệnh thường cần được hỗ trợ bởi nhiều nguồn bằng chứng thay vì chỉ dựa vào một tín hiệu duy nhất. Hình~\ref{fig:system_architecture} trình bày framework đề xuất của hệ thống theo định hướng trên.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figure_system_architecture.png}
+    \caption{Framework đề xuất của hệ thống hỗ trợ đánh giá bệnh mạch vành đa nguồn dữ liệu, gồm bốn tầng từ tiếp nhận dữ liệu đến lớp ứng dụng hỗ trợ quyết định lâm sàng. Thành phần phân tầng nguy cơ CAD bằng khai phá luật kết hợp và \textit{protective score} (nhánh xanh dương) khai thác dữ liệu lâm sàng dạng bảng theo hướng diễn giải được. Thành phần kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực (nhánh xanh lá) phân tích và kiểm chứng cơ chế bất thường ECG ST/T theo hướng phản thực. Kết quả của hai thành phần được tổng hợp thành báo cáo hỗ trợ đánh giá cho bác sĩ ở các tầng phía trên.}
+    \label{fig:system_architecture}
+\end{figure}
+
+\blocksep
+
+Trong phạm vi khóa luận, hai thành phần phân tích nêu trên cùng các quy trình thực nghiệm tương ứng được hiện thực hóa trực tiếp ở mức nghiên cứu. Các tầng tích hợp báo cáo và lớp ứng dụng được mô tả ở mức framework nhằm làm rõ cách đặt các bằng chứng từ dữ liệu lâm sàng và dữ liệu ECG trong cùng một khung hỗ trợ đánh giá.
+
+\blocksep
+\noindent{\Large \textbf{Đối tượng và phương pháp nghiên cứu}}
+
+\blocksep
+
+Đối tượng nghiên cứu của khóa luận gồm hai nhóm dữ liệu và hai lớp bài toán bổ sung cho nhau. Nhóm thứ nhất là dữ liệu lâm sàng dạng bảng liên quan đến CAD, được sử dụng để nghiên cứu bài toán phân tầng nguy cơ và rút trích tri thức có khả năng diễn giải. Nhóm thứ hai là dữ liệu ECG 12 chuyển đạo, được sử dụng để nghiên cứu bài toán nhận diện và kiểm chứng cơ chế bất thường ST/T như một nguồn bằng chứng tín hiệu hỗ trợ cho đánh giá tim mạch liên quan đến CAD.
+
+\blocksep
+
+Về phương pháp, khóa luận kết hợp hai hướng tiếp cận. Với dữ liệu lâm sàng, phương pháp chính gồm tiền xử lý, rời rạc hóa, khai phá luật kết hợp và xây dựng \textit{protective score}, sau đó đánh giá bằng cross-validation theo cơ chế không rò rỉ thông tin. Với dữ liệu ECG, phương pháp chính gồm trích xuất đặc trưng điện tâm đồ, huấn luyện mô hình phân loại và kiểm chứng cơ chế bằng phản thực mức đặc trưng, phản thực mức dạng sóng, đối chứng âm tính, quan hệ liều -- đáp ứng và xác thực ngoại bộ. Trên toàn bộ khóa luận, quá trình nghiên cứu được triển khai theo hướng thực nghiệm định lượng, đồng thời đối chiếu kết quả với trực giác lâm sàng và yêu cầu về tính diễn giải.
+
+\blocksep
+\noindent{\Large \textbf{Mục tiêu nghiên cứu}}
+
+\blocksep
+
+Khóa luận hướng tới bốn mục tiêu nghiên cứu chính. Thứ nhất, đề xuất framework hệ thống hỗ trợ đánh giá bệnh động mạch vành theo hướng đa nguồn dữ liệu, kết hợp dữ liệu lâm sàng dạng bảng và dữ liệu ECG. Thứ hai, đề xuất một quy trình khai phá luật kết hợp trên dữ liệu lâm sàng nhằm xây dựng thang điểm phân tầng nguy cơ có khả năng diễn giải. Thứ ba, xây dựng mô hình kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực, xem cơ chế này như một tín hiệu sinh học hỗ trợ cho đánh giá nguy cơ tim mạch liên quan đến CAD. Thứ tư, đánh giá mức độ hợp lý, tính nhất quán và giá trị hỗ trợ chuyên môn của hai pha nghiên cứu thông qua các thí nghiệm định lượng phù hợp.
+
+\blocksep
+\noindent{\Large \textbf{Đóng góp của đề tài}}
+\blocksep
+
+Các đóng góp chính của khóa luận bao gồm ba hướng.
+
+Thứ nhất, đề xuất framework hệ thống và khung nghiên cứu hai pha cho bài toán hỗ trợ đánh giá bệnh động mạch vành, trong đó mỗi pha khai thác một nguồn dữ liệu khác nhau nhưng cùng hướng tới mục tiêu tăng cường tính diễn giải và giá trị hỗ trợ thực tiễn.
+
+Thứ hai, xây dựng quy trình xử lý dữ liệu lâm sàng bao gồm tiền xử lý, rời rạc hóa, khai phá luật kết hợp và xây dựng \textit{protective score} phục vụ phân tầng nguy cơ, cùng với đánh giá không rò rỉ thông tin nhằm kiểm tra độ ổn định của các luật.
+
+Thứ ba, xây dựng thành phần kiểm chứng cơ chế ST/T trên ECG theo hướng \textit{lưu trữ nguyên mẫu phản thực có định hướng lâm sàng} và thực hiện các thí nghiệm kiểm chứng theo nhiều lớp bằng chứng, bao gồm đánh giá nội bộ, kiểm chứng ngoại bộ và phản thực ở mức đặc trưng lẫn mức dạng sóng, nhằm làm rõ tính hợp lý cơ chế của mô hình.
+
+\blocksep
+\noindent{\Large \textbf{Phạm vi và giới hạn của đề tài}}
+\blocksep
+
+Khóa luận tập trung vào bài toán \textit{hỗ trợ đánh giá} bệnh động mạch vành, không đặt mục tiêu thay thế hoàn toàn quy trình chẩn đoán lâm sàng. Về mặt hệ thống, phạm vi chính của khóa luận là đề xuất framework tổng thể và hiện thực hai thành phần phân tích cốt lõi của framework đó. Trong đó, pha thứ nhất hiện thực thành phần phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và \textit{protective score}. Pha thứ hai hiện thực thành phần kiểm chứng cơ chế bất thường ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực và các phép thử phản thực đa mức. Vì vậy, kết quả của pha thứ hai không được hiểu như một kết luận chẩn đoán xác định bệnh động mạch vành chỉ từ ECG, mà được xem là bằng chứng hỗ trợ về mặt cơ chế, tính nhất quán tín hiệu và khả năng giải thích của mô hình. Các tầng tích hợp báo cáo và lớp ứng dụng cuối chỉ được mô tả ở mức framework đề xuất, không phải trọng tâm hiện thực hóa của khóa luận.
+
+\blocksep
+\noindent{\Large \textbf{Bố cục của khóa luận}}
+\blocksep
+
+Nội dung của khóa luận được trình bày như sau.
+
+Phần \textit{Mở đầu} trình bày lý do chọn đề tài, mục tiêu nghiên cứu, các đóng góp chính, phạm vi nghiên cứu và bố cục của khóa luận.
+
+\textit{Chương 1. Cơ sở lý thuyết và các nghiên cứu liên quan} trình bày nền tảng về bệnh động mạch vành, phân tầng nguy cơ lâm sàng, vai trò của ECG trong đánh giá tim mạch, học máy diễn giải được và các hướng nghiên cứu liên quan.
+
+\textit{Chương 2. Mô-đun phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và protective score} trình bày dữ liệu sử dụng, quy trình tiền xử lý, khai phá luật kết hợp, xây dựng protective score và phương pháp đánh giá.
+
+\textit{Chương 3. Mô-đun kiểm chứng cơ chế ST/T trên ECG bằng bộ nhớ nguyên mẫu phản thực} trình bày bài toán nghiên cứu, dữ liệu ECG, đặc trưng sử dụng, mô hình phân tích và cơ chế phản thực dùng để kiểm chứng vai trò của bất thường ST/T.
+
+\textit{Chương 4. Thực nghiệm và đánh giá} trình bày thiết lập thực nghiệm và các kết quả đánh giá của hai pha nghiên cứu, đồng thời thảo luận ý nghĩa và giới hạn của các kết quả thu được.
+
+Phần \textit{Kết luận} tổng kết các kết quả đạt được, nêu ra những hạn chế còn tồn tại và đề xuất các hướng phát triển tiếp theo.
+
+\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+\renewcommand{\thetable}{\thechapter.\arabic{table}}

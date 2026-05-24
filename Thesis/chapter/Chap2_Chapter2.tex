@@ -1,0 +1,310 @@
+\clearpage
+\phantomsection
+
+\setcounter{chapter}{1}
+\chapter[{MÔ-ĐUN PHÂN TẦNG NGUY CƠ CAD TỪ DỮ LIỆU LÂM SÀNG BẰNG KHAI PHÁ LUẬT KẾT HỢP VÀ PROTECTIVE SCORE}]{Mô-đun phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và protective score}
+
+Chương này trình bày chi tiết mô-đun phân tầng nguy cơ CAD từ dữ liệu lâm sàng bằng khai phá luật kết hợp và \textit{protective score}, tương ứng với pha nghiên cứu thứ nhất của khóa luận. Khác với các hướng tiếp cận chủ yếu nhấn mạnh vào hiệu năng phân loại, pha nghiên cứu này tập trung vào việc rút trích tri thức trực tiếp từ dữ liệu và tổng hợp tri thức đó thành một thang điểm có thể diễn giải trong bối cảnh lâm sàng.
+
+\blocksep
+
+Về mặt thực nghiệm, pha nghiên cứu thứ nhất được tổ chức quanh bốn thành phần chính: tiền xử lý dữ liệu lâm sàng, khai phá luật kết hợp trong từng lần chia dữ liệu đánh giá chéo, xây dựng \textit{protective score} từ các luật bảo vệ và đánh giá độ ổn định cũng như giá trị phân tầng nguy cơ của thang điểm thu được. Cách tiếp cận này phù hợp với mục tiêu của khóa luận, vì nó cho phép kết nối dữ liệu, tri thức lâm sàng và quy trình đánh giá một cách minh bạch hơn so với việc chỉ huấn luyện một bộ phân loại khó diễn giải, đồng thời vẫn bám sát bài toán CAD.
+
+\blocksep
+
+\section{Tổng quan pha nghiên cứu thứ nhất}
+
+\blocksep
+
+Pha nghiên cứu thứ nhất được thiết kế như một mô-đun hỗ trợ đánh giá nguy cơ CAD từ dữ liệu lâm sàng. Đầu vào của mô-đun là các thuộc tính lâm sàng và cận lâm sàng đã được chuẩn hóa về cùng định dạng, bao gồm cả biến liên tục và biến phân loại. Đầu ra của mô-đun không phải là một xác suất dự đoán duy nhất, mà là một chỉ số phân tầng nguy cơ có thể giải thích thông qua các luật kết hợp rút ra từ dữ liệu.
+
+\blocksep
+
+Ý tưởng trung tâm của pha nghiên cứu này là thay vì chỉ hỏi mô hình “dự đoán bệnh hay không bệnh”, xây dựng một thang điểm phản ánh mức độ hiện diện của các dấu hiệu gắn với nhóm nguy cơ thấp hoặc nhóm không CAD. Nếu một bệnh nhân thỏa mãn nhiều quy tắc bảo vệ ổn định, bệnh nhân đó sẽ nhận \textit{protective score} cao hơn và có xu hướng thuộc nhóm nguy cơ thấp hơn. Cách tiếp cận này gần với tư duy phân tầng trong thực hành lâm sàng, nơi người bệnh thường được xếp theo mức nguy cơ thay vì chỉ nhận một nhãn nhị phân.
+
+\blocksep
+
+Toàn bộ quy trình của pha nghiên cứu thứ nhất được tóm tắt trong Hình~\ref{fig:phase1_pipeline}. Quy trình bắt đầu từ dữ liệu lâm sàng thô, sau đó trải qua các bước tiền xử lý, rời rạc hóa và mã hóa one-hot. Trên dữ liệu đã mã hóa, các luật kết hợp được khai phá trong từng tập huấn luyện, tách thành luật liên quan đến CAD và luật liên quan đến nhóm bảo vệ. Từ tập luật bảo vệ, một \textit{protective score} được xây dựng theo nguyên tắc đếm các nhóm đặc trưng lâm sàng độc nhất đã khớp, rồi được sử dụng để phân tầng nguy cơ và đánh giá.
+
+\blocksep
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figure_phase1_pipeline.png}
+    \caption{Pipeline tổng thể của pha nghiên cứu thứ nhất.}
+    \label{fig:phase1_pipeline}
+\end{figure}
+
+\section{Dữ liệu sử dụng và tiền xử lý}
+
+\blocksep
+
+\subsection{Bộ dữ liệu sử dụng}
+
+\blocksep
+
+Pha nghiên cứu thứ nhất sử dụng ba bộ dữ liệu lâm sàng liên quan đến CAD. Bộ dữ liệu chính là Z-Alizadeh Sani, gồm 303 ca với 55 thuộc tính gốc và nhãn chẩn đoán dựa trên kết quả chụp mạch vành \cite{AlizadehSani2013}. Đây là bộ dữ liệu có mức độ chi tiết cao, bao gồm các biến nhân khẩu học, triệu chứng lâm sàng, yếu tố nguy cơ nền, xét nghiệm máu và một số chỉ số tim mạch chức năng. Trong pha nghiên cứu này, Z-Alizadeh được xem là nguồn dữ liệu trọng tâm để xây dựng và kiểm tra tính hợp lý của \textit{protective score}.
+
+\blocksep
+
+Hai bộ dữ liệu còn lại là UCI Cleveland và UCI Hungarian \cite{Detrano1989}, đều được chuyển về nhãn nhị phân CAD thông qua biến \texttt{Num > 0}. Mỗi bộ dữ liệu có quy mô khoảng 300 ca, số thuộc tính gốc ít hơn Z-Alizadeh nhưng vẫn có vai trò quan trọng trong việc kiểm tra khả năng tổng quát hóa của phương pháp. Việc sử dụng đồng thời ba bộ dữ liệu giúp hạn chế nguy cơ rút ra kết luận chỉ từ một cấu trúc dữ liệu đơn lẻ và tạo điều kiện đánh giá phương pháp trên những miền lâm sàng khác nhau.
+
+\blocksep
+
+Trong pha nghiên cứu thứ nhất, thống kê tổng quát cho ba bộ dữ liệu như sau:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item Z-Alizadeh: 303 mẫu, tỷ lệ CAD khoảng 71.3\%, 55 thuộc tính gốc.
+	\item UCI Cleveland: 303 mẫu, tỷ lệ CAD khoảng 45.9\%, 13 thuộc tính gốc.
+	\item UCI Hungarian: 294 mẫu, tỷ lệ CAD khoảng 36.1\%, 13 thuộc tính gốc.
+\end{itemize}
+
+\blocksep
+
+Bảng~\ref{tab:phase1_datasets} tổng hợp đặc điểm chính của ba bộ dữ liệu theo định dạng so sánh, bao gồm quy mô mẫu, tỷ lệ dương tính, số thuộc tính gốc trước khi tiền xử lý và cách gán nhãn lâm sàng.
+
+\blocksep
+
+\begin{table}[H]
+\centering
+\caption{Đặc điểm tổng quát của ba bộ dữ liệu lâm sàng trong pha nghiên cứu thứ nhất}
+\label{tab:phase1_datasets}
+\begin{tabular}{p{0.24\linewidth}C{0.12\linewidth}C{0.14\linewidth}C{0.18\linewidth}p{0.20\linewidth}}
+\hline
+\textbf{Bộ dữ liệu} & \textbf{Số mẫu} & \textbf{Tỷ lệ CAD} & \textbf{Số thuộc tính gốc} & \textbf{Cách gán nhãn} \\
+\hline
+Z-Alizadeh Sani & 303 & 71.3\% & 55 & Kết quả chụp mạch vành \\
+UCI Cleveland & 303 & 45.9\% & 13 & \texttt{Num > 0} \\
+UCI Hungarian & 294 & 36.1\% & 13 & \texttt{Num > 0} \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+\subsection{Xử lý dữ liệu thiếu và chuẩn hóa dữ liệu}
+
+\blocksep
+
+Dữ liệu lâm sàng trong thực tế thường tồn tại giá trị thiếu hoặc khác biệt về cách mã hóa giữa các bộ dữ liệu. Vì vậy, bước tiền xử lý được thiết kế theo hướng đơn giản nhưng ổn định. Với các biến số, giá trị thiếu được thay bằng trung vị của cột; với các biến phân loại, giá trị thiếu được thay bằng mode. Lựa chọn này giúp giảm ảnh hưởng của ngoại lai và tránh đưa thêm những giả định quá mạnh vào dữ liệu.
+
+\blocksep
+
+Đối với Z-Alizadeh, các biến nhị phân hoặc dạng yes/no được chuẩn hóa về dạng 0/1. Một số trường hợp mã hóa không đồng nhất như \texttt{Fmale}, \texttt{female} hoặc \texttt{male} cũng được chuẩn hóa lại trước khi sử dụng. Đối với UCI Cleveland và UCI Hungarian, toàn bộ các cột được ép về kiểu số, ký hiệu \texttt{?} được xử lý như dữ liệu thiếu, sau đó nhãn \texttt{Cath} được sinh từ biến \texttt{Num}. Nhờ vậy, cả ba bộ dữ liệu đều được đưa về cùng một đích biểu diễn: các mẫu lâm sàng với nhãn nhị phân CAD/Normal.
+
+\blocksep
+
+\subsection{Rời rạc hóa các biến liên tục}
+
+\blocksep
+
+Do khai phá luật kết hợp hoạt động hiệu quả nhất trên dữ liệu rời rạc, các biến liên tục được chuyển thành các khoảng giá trị có ý nghĩa lâm sàng. Trong chương trình thực nghiệm của pha nghiên cứu thứ nhất, tập ngưỡng rời rạc hóa được khai báo rõ trong \texttt{cad\_tabular\_config.py} dưới hai cấu hình riêng cho Z-Alizadeh và UCI.
+
+\blocksep
+
+Với Z-Alizadeh, các biến như tuổi, BMI, huyết áp, đường huyết đói, LDL, HDL, triglyceride hoặc phân suất tống máu được chia thành các mức như \texttt{young/mid/old}, \texttt{normal/over/obese}, \texttt{optimal/high}, \texttt{poor/mid/good}. Với UCI, các biến như huyết áp nghỉ, cholesterol, nhịp tim cực đại và \texttt{oldpeak} cũng được rời rạc hóa thành các mức có thể diễn giải theo lâm sàng.
+
+\blocksep
+
+Rời rạc hóa theo ngưỡng có hai vai trò chính. Thứ nhất, nó đưa dữ liệu về dạng phù hợp với khai phá luật. Thứ hai, nó làm tăng khả năng diễn giải của luật thu được, vì mỗi điều kiện trong luật tương ứng với một trạng thái y sinh có thể hiểu được, thay vì một giá trị liên tục khó sử dụng trực tiếp trong lập luận lâm sàng.
+
+\blocksep
+
+\subsection{Mã hóa one-hot và biểu diễn giao dịch}
+
+\blocksep
+
+Sau bước rời rạc hóa, mỗi mẫu bệnh nhân được chuyển thành một bản ghi gồm các mục (items), trong đó mỗi mục biểu diễn một trạng thái cụ thể của một thuộc tính, chẳng hạn như \texttt{Age\_bin\_old}, \texttt{LDL\_bin\_high} hoặc \texttt{Typical Chest Pain\_1}. Tiếp theo, dữ liệu được mã hóa one-hot để tạo ra ma trận nhị phân phục vụ khai phá luật.
+
+\blocksep
+
+Trong biểu diễn này, mỗi hàng tương ứng với một bệnh nhân và mỗi cột tương ứng với một item. Với Z-Alizadeh, số item sau mã hóa là 107; với Cleveland là 42; với Hungarian là 39. Cách biểu diễn này cho phép xem mỗi bệnh nhân như một “giao dịch” trong bài toán khai phá luật kết hợp, còn các yếu tố lâm sàng là những mục xuất hiện trong giao dịch đó.
+
+\blocksep
+
+Một chi tiết quan trọng là nhãn cũng được đưa vào dữ liệu dưới dạng hai item đặc biệt: \texttt{Cath\_Cad\_Y} và \texttt{Cath\_Normal\_Y}. Tuy nhiên, trong khai phá luật, các item này chỉ được phép xuất hiện ở vế kết luận, không được xuất hiện ở vế điều kiện. Ràng buộc này bảo đảm rằng các luật thực sự biểu diễn mối liên hệ từ đặc trưng lâm sàng đến tình trạng bệnh, thay vì làm rò rỉ nhãn vào điều kiện.
+
+\blocksep
+
+\section{Khai phá luật kết hợp}
+
+\blocksep
+
+\subsection{Thuật toán và các tham số chính}
+
+\blocksep
+
+Trong pha nghiên cứu thứ nhất, các luật kết hợp được khai phá bằng thuật toán Apriori \cite{Agrawal1994} thông qua thư viện \texttt{mlxtend} \cite{Raschka2018}. Thuật toán được cấu hình theo các tham số chính sau:
+
+\renewcommand{\labelitemi}{$+$}
+\begin{itemize}
+	\item \texttt{min\_support = 0.06}
+	\item \texttt{min\_confidence = 0.60}
+	\item \texttt{min\_lift = 1.40}
+	\item \texttt{max\_len = 3}
+	\item \texttt{top\_n\_rules = 10}
+	\item \texttt{threshold = 2}
+	\item \texttt{n\_splits = 5}
+\end{itemize}
+
+\blocksep
+
+Ngưỡng \texttt{support} giúp loại bỏ các mẫu hình quá hiếm; \texttt{confidence} bảo đảm độ mạnh của luật; \texttt{lift} giúp loại bỏ các luật có thể xuất hiện do ngẫu nhiên; còn \texttt{max\_len = 3} kiểm soát độ phức tạp của vế điều kiện để luật vẫn đủ gọn cho việc diễn giải. Bộ tham số này là một lựa chọn cân bằng giữa độ phong phú của luật và khả năng sử dụng luật như tri thức lâm sàng.
+
+\blocksep
+
+\subsection{Tách luật CAD và luật bảo vệ}
+
+\blocksep
+
+Sau khi sinh luật, các luật được chia thành hai nhóm dựa trên vế kết luận. Nhóm thứ nhất là các luật có kết luận \texttt{Cath\_Cad\_Y}, phản ánh các tổ hợp đặc trưng liên quan đến CAD. Nhóm thứ hai là các luật có kết luận \texttt{Cath\_Normal\_Y}, được xem là các luật bảo vệ (\textit{protective rules}). Cả hai nhóm luật đều hữu ích trong mô tả dữ liệu, nhưng pha nghiên cứu thứ nhất chọn nhóm protective rules làm nền tảng cho thang điểm phân tầng nguy cơ.
+
+\blocksep
+
+Lý do của lựa chọn này là \textit{protective score} được dùng như một chỉ số phản ánh mức độ hiện diện của các dấu hiệu nguy cơ thấp. Khi một bệnh nhân thỏa mãn càng nhiều nhóm dấu hiệu bảo vệ độc lập, khả năng bệnh nhân thuộc nhóm nguy cơ thấp càng lớn. Cách xây dựng này cũng phù hợp với kết quả thực nghiệm, nơi \textit{protective score} cho quan hệ nghịch khá rõ với nhãn CAD trên cả ba bộ dữ liệu.
+
+\blocksep
+
+Để hình dung dạng biểu diễn, một ví dụ minh họa về luật bảo vệ điển hình có thể có dạng:
+\begin{center}
+\texttt{EF-TTE\_bin\_good} $\wedge$ \texttt{LDL\_bin\_optimal} $\longrightarrow$ \texttt{Cath\_Normal\_Y}
+\end{center}
+Luật này phản ánh rằng bệnh nhân có phân suất tống máu tốt và mức LDL tối ưu có xác suất thuộc nhóm bình thường cao hơn mức ngẫu nhiên, với đủ độ hỗ trợ, độ tin cậy và lift để được giữ lại sau bước lọc tham số. Dạng biểu diễn này gần với lập luận lâm sàng: các điều kiện ở vế trái là những dấu hiệu thuận lợi dễ đọc và dễ đối chiếu với kiến thức chuyên môn, còn vế phải liên kết trực tiếp đến kết cục lâm sàng.
+
+\blocksep
+
+\subsection{Độ ổn định của luật}
+
+\blocksep
+
+Một vấn đề quan trọng của khai phá luật là các luật sinh ra có thể nhạy với cách chia dữ liệu. Vì vậy, pha nghiên cứu thứ nhất không chỉ quan tâm đến số lượng luật, mà còn đánh giá độ ổn định của luật qua các lần chia dữ liệu trong đánh giá chéo. Sau mỗi lần chia dữ liệu, các luật bảo vệ hàng đầu được lưu lại và tổng hợp bằng các chỉ số như số lần xuất hiện, tần suất xuất hiện, mean support, mean confidence và mean lift.
+
+\blocksep
+
+Đánh giá này giúp phân biệt giữa các luật xuất hiện lặp lại một cách bền vững và các luật chỉ nổi lên do dao động cục bộ của dữ liệu. Trong bối cảnh lâm sàng, độ ổn định là một tiêu chí quan trọng không kém hiệu năng, vì một tri thức chỉ có giá trị hỗ trợ khi nó không quá nhạy với biến động ngẫu nhiên của tập mẫu.
+
+\blocksep
+
+Phần thực nghiệm sẽ trình bày cụ thể các kết quả lượng hóa và minh họa cho tính ổn định này. Về phương pháp, điểm cốt lõi là \textit{protective score} được xây dựng theo hướng ưu tiên các tổ hợp đặc trưng có khả năng lặp lại qua nhiều lần chia dữ liệu, thay vì dựa vào những mẫu hình ngẫu nhiên đơn lẻ.
+
+\blocksep
+
+\section{Xây dựng protective score}
+
+\blocksep
+
+\subsection{Nguyên tắc xây dựng điểm}
+
+\blocksep
+
+\textit{Protective score} trong pha nghiên cứu thứ nhất không đơn thuần là số lượng luật bảo vệ mà một bệnh nhân thỏa mãn. Nếu cộng trực tiếp số luật, một đặc trưng lâm sàng có thể bị “đếm nhiều lần” khi nó xuất hiện lặp lại trong nhiều luật khác nhau. Điều đó làm cho điểm số bị lệch theo mức dư thừa của luật, thay vì phản ánh độ đa dạng của các bằng chứng bảo vệ.
+
+\blocksep
+
+Để tránh hiện tượng này, nghiên cứu sử dụng nguyên tắc \textit{unique matched clinical features}. Cụ thể, mỗi item trong luật được quy về một nhóm đặc trưng gốc thông qua hàm \texttt{item\_to\_feature}. Sau đó, \textit{protective score} của một bệnh nhân được tính bằng số nhóm đặc trưng mà bệnh nhân có ít nhất một luật bảo vệ khớp.
+
+\blocksep
+
+Gọi $\mathcal{F}$ là tập các nhóm đặc trưng xuất hiện trong tập luật bảo vệ được chọn, và $\mathbf{1}_f(x)$ là biến chỉ báo cho biết bệnh nhân $x$ có khớp với ít nhất một luật thuộc nhóm đặc trưng $f$ hay không. Khi đó, \textit{protective score} có thể được mô tả khái quát như sau:
+\[
+S(x) = \sum_{f \in \mathcal{F}} \mathbf{1}_f(x).
+\]
+
+Ý tưởng của công thức trên là mỗi nhóm đặc trưng chỉ đóng góp tối đa một đơn vị vào tổng điểm. Nhờ vậy, điểm số phản ánh số lượng bằng chứng bảo vệ độc lập thay vì số luật thuần túy.
+
+\blocksep
+
+\subsection{Thiết lập điểm số trong từng lần chia dữ liệu}
+
+\blocksep
+
+Trong mỗi lần chia dữ liệu của đánh giá chéo, các luật bảo vệ được khai phá trên tập huấn luyện, sau đó loại trùng theo antecedent và chỉ giữ \texttt{top\_n\_rules = 10} antecedent tốt nhất. Chính tập antecedent này được dùng để tính \textit{protective score} cho các mẫu ở tập kiểm tra của lần chia dữ liệu tương ứng. Cơ chế này bảo đảm rằng điểm số ngoài mẫu thực sự phản ánh khả năng áp dụng của phương pháp trên dữ liệu chưa được quan sát trong giai đoạn khai phá luật.
+
+\blocksep
+
+Ngưỡng phân tầng được cố định là \texttt{threshold = 2}. Tức là bệnh nhân có \textit{protective score} lớn hơn hoặc bằng 2 được xếp vào nhóm “điểm cao”, còn lại thuộc nhóm “điểm thấp”. Cách chia này được dùng nhất quán trong các báo cáo của pha nghiên cứu thứ nhất để tính tỷ lệ CAD giữa các nhóm, odds ratio và các kiểm định liên quan.
+
+\blocksep
+
+\subsection{Ý nghĩa lâm sàng của protective score}
+
+\blocksep
+
+Khác với xác suất dự đoán do một bộ phân loại trả về, \textit{protective score} có thể được truy ngược về các luật bảo vệ và các nhóm đặc trưng lâm sàng cụ thể. Điều này giúp bác sĩ hoặc người đọc không chỉ thấy một bệnh nhân thuộc nhóm nguy cơ thấp hơn, mà còn có thể xem mức đánh giá đó gắn với những dấu hiệu nào. Theo nghĩa đó, \textit{protective score} đóng vai trò như một cầu nối giữa dữ liệu khai phá được và diễn giải lâm sàng.
+
+\blocksep
+
+Từ góc nhìn phương pháp luận, \textit{protective score} không nhằm thay thế hoàn toàn các mô hình phân loại chuẩn. Thay vào đó, nó được xem như một chỉ số diễn giải được, có thể đứng độc lập để phân tầng nguy cơ hoặc được đưa thêm vào một mô hình logistic như một đặc trưng tổng hợp. Đây cũng là lý do pha nghiên cứu thứ nhất có bước so sánh giữa mô hình logistic đối chiếu và mô hình logistic có bổ sung \textit{protective score}, nhưng chỉ xem đây là phép kiểm tra phụ chứ không phải kết luận trọng tâm của pha nghiên cứu.
+
+\blocksep
+
+\section{Thiết kế đánh giá}
+
+\blocksep
+
+\subsection{Đánh giá chéo không rò rỉ thông tin}
+
+\blocksep
+
+Một điểm quan trọng trong pha nghiên cứu thứ nhất là toàn bộ quy trình được thực hiện theo cơ chế đánh giá chéo không rò rỉ thông tin. Cụ thể, dữ liệu được chia phân tầng thành 5 phần, và ở mỗi vòng, tất cả các bước khai phá luật và chọn luật đều chỉ được thực hiện trên tập huấn luyện. Tập kiểm tra chỉ được dùng để tính \textit{protective score} ngoài mẫu và đo lường kết quả cuối cùng.
+
+\blocksep
+
+Thiết kế này đặc biệt quan trọng trong khai phá tri thức từ dữ liệu lâm sàng. Nếu khai phá luật trên toàn bộ dữ liệu rồi mới đánh giá, các luật dùng để tính điểm đã “nhìn thấy” cả tập kiểm tra, dẫn đến đánh giá lạc quan giả tạo. Cách làm trong pha nghiên cứu thứ nhất tránh được rủi ro này và đưa ra một ước lượng thực tế hơn về khả năng tổng quát hóa của phương pháp.
+
+\blocksep
+
+\subsection{Các độ đo đánh giá chính}
+
+\blocksep
+
+\textit{Protective score} được đánh giá theo nhiều góc nhìn: hệ số tương quan hạng Spearman giữa protective score và nhãn CAD; tỷ lệ CAD trong nhóm điểm cao và nhóm điểm thấp; odds ratio giữa hai nhóm sau khi chia ngưỡng tại score = 2; Fisher exact test để kiểm tra ý nghĩa thống kê của sự khác biệt; và so sánh ROC-AUC, PR-AUC và chỉ số Brier giữa mô hình logistic đối chiếu và mô hình logistic có bổ sung protective score.
+
+\blocksep
+
+Trong đó, Spearman phù hợp để đo xu hướng đơn điệu giữa score và nhãn bệnh. Odds ratio và Fisher test giúp lượng hóa giá trị phân tầng nguy cơ theo cách gần với lập luận lâm sàng hơn là chỉ nhìn vào một chỉ số AUC. Hai cấu hình logistic được dùng để kiểm tra xem \textit{protective score} có mang thêm thông tin hữu ích khi được đưa vào một bộ phân loại xác suất hay không.
+
+\blocksep
+
+\subsection{Khả năng tổng quát hóa trên ba bộ dữ liệu}
+
+\blocksep
+
+Một điểm quan trọng của pha nghiên cứu thứ nhất là phương pháp được áp dụng nhất quán trên ba bộ dữ liệu có đặc điểm khác nhau. Kết quả tổng hợp cho thấy \textit{protective score} có tương quan nghịch với CAD trên cả ba bộ dữ liệu, với $\rho$ Spearman xấp xỉ từ $-0.49$ đến $-0.61$. Đồng thời, nhóm \textit{protective score} thấp luôn có tỷ lệ CAD cao hơn rõ rệt so với nhóm điểm cao.
+
+\blocksep
+
+Các kết quả tổng hợp tương ứng sẽ được trình bày trong chương thực nghiệm. Về phương pháp, điều đáng lưu ý là nếu cách xây dựng điểm là hợp lý, thì sự tách biệt về tỷ lệ CAD giữa các nhóm điểm và mối quan hệ nghịch giữa \textit{protective score} với nhãn bệnh phải được quan sát ổn định trên dữ liệu ngoài mẫu.
+
+\blocksep
+
+\section{Thảo luận phương pháp}
+
+\blocksep
+
+Pha nghiên cứu thứ nhất có ba ưu điểm chính. Thứ nhất, tri thức được rút trích trực tiếp dưới dạng luật kết hợp nên dễ truy vết và giải thích. Thứ hai, \textit{protective score} được thiết kế để giảm hiện tượng đếm trùng, nhờ đó phù hợp hơn với mục tiêu phân tầng nguy cơ. Thứ ba, quy trình đánh giá không rò rỉ thông tin và việc áp dụng trên ba bộ dữ liệu góp phần tăng độ tin cậy của kết luận phương pháp.
+
+\blocksep
+
+Tuy nhiên, phương pháp cũng có những giới hạn rõ ràng. Kết quả phụ thuộc vào chất lượng rời rạc hóa và vào miền đặc trưng của từng bộ dữ liệu. Số lượng luật thu được có thể khác biệt khá mạnh giữa các bộ dữ liệu, phản ánh sự khác nhau về phân phối và mức độ chi tiết của biến đầu vào. Ngoài ra, như phần thực nghiệm sẽ cho thấy, việc so sánh với các thang điểm truyền thống như Framingham hoặc SCORE không phải hướng kết luận chính do nhiều biến bị thiếu; còn phần so sánh hai cấu hình logistic chỉ nên xem là phép kiểm tra phụ trợ.
+
+\blocksep
+
+Vì vậy, đóng góp trọng tâm của pha nghiên cứu thứ nhất không nằm ở việc tạo ra một bước nhảy lớn về phân loại xác suất, mà ở việc xây dựng một quy trình khai phá tri thức lâm sàng có thể diễn giải, được đánh giá bằng cơ chế ngoài mẫu và có giá trị như lớp phân tầng nguy cơ CAD trực tiếp nhất trong hệ thống hỗ trợ đánh giá đa nguồn dữ liệu của khóa luận.
+
+\blocksep
+
+\section{Kết luận pha nghiên cứu thứ nhất}
+
+\blocksep
+
+Chương này đã trình bày phương pháp của pha nghiên cứu thứ nhất, trong đó dữ liệu lâm sàng dạng bảng được khai thác để xây dựng \textit{protective score} phục vụ phân tầng nguy cơ CAD. Trọng tâm của phương pháp nằm ở ba điểm: rời rạc hóa và chuẩn hóa dữ liệu lâm sàng, khai phá luật kết hợp trong từng tập huấn luyện và tổng hợp các luật bảo vệ thành một chỉ số đếm theo nhóm đặc trưng độc nhất.
+
+\blocksep
+
+Thiết kế đánh giá của pha nghiên cứu thứ nhất cho thấy phương pháp không chỉ tạo ra một chỉ số dễ diễn giải, mà còn duy trì được tính nhất quán trên nhiều bộ dữ liệu và trong điều kiện đánh giá chéo không rò rỉ thông tin. Đồng thời, ranh giới của kết luận cũng được xác định khá rõ: \textit{protective score} có giá trị nổi bật ở phân tầng nguy cơ CAD và diễn giải, trong khi phần cải thiện so với mô hình logistic đối chiếu chỉ đóng vai trò bổ trợ.
+
+\blocksep
+
+Trên cơ sở đó, pha nghiên cứu thứ nhất được xem như lớp tri thức lâm sàng của hệ thống hỗ trợ đánh giá trong khóa luận. Chương tiếp theo sẽ chuyển sang pha nghiên cứu thứ hai, nơi dữ liệu ECG được khai thác để phân tích và kiểm chứng cơ chế bất thường ST/T theo hướng giải thích được.

@@ -1,0 +1,228 @@
+\clearpage
+\phantomsection
+
+\setcounter{chapter}{0}
+\chapter[{CƠ SỞ LÝ THUYẾT VÀ CÁC NGHIÊN CỨU LIÊN QUAN}]{Cơ sở lý thuyết và các nghiên cứu liên quan}
+
+Chương này trình bày cơ sở lý thuyết và các hướng nghiên cứu liên quan làm nền tảng cho khóa luận. Trọng tâm của chương là làm rõ bối cảnh của bài toán đánh giá bệnh động mạch vành, vai trò của dữ liệu lâm sàng dạng bảng trong phân tầng nguy cơ, vai trò của tín hiệu điện tâm đồ trong phản ánh bất thường điện học liên quan đến nguy cơ tim mạch, cũng như yêu cầu về tính diễn giải và độ tin cậy của các mô hình học máy trong y sinh.
+
+\blocksep
+
+Bên cạnh việc tổng hợp các phương pháp nền tảng, chương này cũng chỉ ra khoảng trống giữa các mô hình dự đoán thuần túy và nhu cầu hỗ trợ chuyên môn trong thực hành lâm sàng. Từ đó, chương làm rõ động lực cho hướng tiếp cận của khóa luận: pha nghiên cứu thứ nhất tập trung vào dữ liệu lâm sàng để xây dựng thang điểm phân tầng nguy cơ có khả năng diễn giải, trong khi pha nghiên cứu thứ hai tập trung vào dữ liệu ECG để kiểm chứng cơ chế bất thường ST/T bằng phản thực và xác thực trên dữ liệu ngoại bộ.
+
+\blocksep
+
+\section{Bài toán hỗ trợ đánh giá bệnh động mạch vành đa nguồn dữ liệu}
+
+\blocksep
+
+Bệnh động mạch vành (Coronary Artery Disease -- CAD) là một trong những nguyên nhân hàng đầu gây tử vong và tàn tật trên toàn thế giới \cite{Libby2011}. Trong thực hành lâm sàng, việc đánh giá nguy cơ CAD có ý nghĩa quan trọng không chỉ ở giai đoạn sàng lọc ban đầu mà còn trong chỉ định xét nghiệm, lựa chọn chiến lược theo dõi và quyết định can thiệp. Tuy nhiên, CAD là một bệnh lý có cơ chế phức tạp, biểu hiện lâm sàng đa dạng và thường không thể được đánh giá đầy đủ chỉ từ một nguồn dữ liệu đơn lẻ.
+
+\blocksep
+
+Thông tin phục vụ đánh giá người bệnh thường đến từ nhiều nguồn khác nhau. Dữ liệu lâm sàng dạng bảng chứa các yếu tố nguy cơ nền như tuổi, giới tính, tiền sử bệnh, đau ngực, huyết áp, lipid máu hoặc đái tháo đường. Đây là những thông tin có giá trị cao trong phân tầng nguy cơ và phù hợp với các công cụ hỗ trợ quyết định dạng điểm số. Trong khi đó, dữ liệu điện tâm đồ (ECG) phản ánh hoạt động điện học của tim theo thời gian, cho phép quan sát các bất thường chức năng mà dữ liệu tĩnh dạng bảng khó thể hiện đầy đủ \cite{Clifford2006}.
+
+\blocksep
+
+Vì vậy, một cách nhìn phù hợp trong bối cảnh hiện nay là xem bài toán như một hệ thống hỗ trợ đánh giá đa nguồn dữ liệu. Theo cách tiếp cận này, dữ liệu lâm sàng và dữ liệu ECG không nhất thiết phải bị ép vào cùng một mô hình duy nhất. Thay vào đó, hai nguồn dữ liệu có thể được đặt trong cùng một framework hỗ trợ đánh giá nhưng được xử lý bởi các mô-đun chuyên biệt. Khi đó, dữ liệu lâm sàng hỗ trợ phân tầng nguy cơ CAD ở mức khái quát, còn dữ liệu ECG hỗ trợ nhận diện và kiểm chứng các cơ chế bất thường điện học có ý nghĩa lâm sàng đối với đánh giá nguy cơ tim mạch.
+
+\blocksep
+
+Trong y sinh, một hệ thống hỗ trợ có giá trị không chỉ cần đạt hiệu năng dự đoán tốt mà còn phải tạo ra được bằng chứng đủ rõ để bác sĩ có thể sử dụng trong bối cảnh ra quyết định thực tế \cite{Topol2019}. Vì vậy, bên cạnh hiệu năng, các khía cạnh như tính diễn giải, độ tin cậy, tính nhất quán khi chuyển sang dữ liệu ngoại bộ và khả năng làm rõ cơ chế tín hiệu là những tiêu chí đặc biệt quan trọng đối với các nghiên cứu theo hướng ứng dụng lâm sàng.
+
+\blocksep
+
+\section{Phân tầng nguy cơ bệnh động mạch vành từ dữ liệu lâm sàng}
+
+\blocksep
+
+\subsection{Các thang điểm nguy cơ truyền thống}
+
+\blocksep
+
+Đánh giá nguy cơ tim mạch từ dữ liệu lâm sàng là một hướng nghiên cứu lâu đời và có nền tảng vững chắc trong y học thực chứng. Một trong những cách tiếp cận sớm là sử dụng các thang điểm hoặc mô hình xác suất dựa trên các biến lâm sàng cơ bản. Ví dụ điển hình là mô hình Diamond--Forrester, trong đó tuổi, giới tính và kiểu đau ngực được sử dụng để ước lượng xác suất mắc CAD trước xét nghiệm \cite{Diamond1979}. Cách tiếp cận này có ưu điểm là đơn giản, dễ sử dụng và gần với tư duy ra quyết định lâm sàng.
+
+\blocksep
+
+Ở phạm vi nguy cơ tim mạch rộng hơn, các thang điểm như Framingham Risk Score và SCORE được phát triển nhằm ước lượng xác suất biến cố tim mạch trong trung và dài hạn dựa trên các yếu tố nguy cơ như huyết áp, cholesterol, hút thuốc và đái tháo đường \cite{DAgostino2008, Conroy2003}. Các thang điểm này đã được xác thực trên nhiều quần thể và giữ vai trò quan trọng trong các hướng dẫn lâm sàng.
+
+\blocksep
+
+Tuy nhiên, các mô hình truyền thống cũng có những hạn chế rõ ràng. Thứ nhất, chúng thường dựa trên số lượng biến đầu vào hạn chế và giả định cấu trúc quan hệ tương đối đơn giản giữa các yếu tố nguy cơ. Thứ hai, hiệu năng của các thang điểm có thể giảm khi áp dụng sang quần thể khác hoặc khi dữ liệu đầu vào bị thiếu hụt. Thứ ba, chúng khó nắm bắt các tổ hợp đặc trưng phức tạp hoặc các mẫu hình hiếm gặp nhưng có ý nghĩa đối với phân tầng nguy cơ \cite{Krittanawong2017}.
+
+\blocksep
+
+\subsection{Các phương pháp học máy trên dữ liệu lâm sàng dạng bảng}
+
+\blocksep
+
+Sự phát triển của học máy mở ra khả năng xây dựng các mô hình dự đoán linh hoạt hơn trên dữ liệu lâm sàng dạng bảng. Nhiều thuật toán như logistic regression mở rộng, cây quyết định, random forest, gradient boosting hoặc các mô hình tổ hợp có thể khai thác tốt hơn mối quan hệ phi tuyến và tương tác giữa nhiều biến lâm sàng \cite{Krittanawong2017}. Trong nhiều trường hợp, các mô hình này cho hiệu năng tốt hơn so với các thang điểm truyền thống khi được huấn luyện và đánh giá cẩn thận.
+
+\blocksep
+
+Tuy nhiên, hiệu năng cao không đồng nghĩa với giá trị hỗ trợ lâm sàng cao. Các mô hình phức tạp thường khó giải thích hơn, đặc biệt khi sử dụng nhiều biến đầu vào có tương quan chồng lấp. Trong các ứng dụng liên quan đến phân tầng nguy cơ, bác sĩ không chỉ quan tâm đến nhãn đầu ra mà còn cần biết yếu tố nào đóng vai trò bảo vệ, yếu tố nào đi kèm nguy cơ cao, và mẫu hình nào lặp lại đủ ổn định để có thể sử dụng trong thực hành \cite{Lipton2018, Rudin2019}.
+
+\blocksep
+
+Vì vậy, một hướng đi quan trọng là kết hợp sức mạnh của học máy với các hình thức biểu diễn tri thức dễ hiểu hơn. Trong khóa luận này, dữ liệu lâm sàng không được sử dụng chủ yếu để xây dựng một bộ phân loại “hộp đen”, mà được khai thác nhằm rút ra các luật kết hợp có ý nghĩa và tổng hợp chúng thành một thang điểm phân tầng nguy cơ. Cách tiếp cận này phù hợp với đặc điểm của pha nghiên cứu thứ nhất, nơi mục tiêu trọng tâm là tri thức diễn giải được và đánh giá không rò rỉ thông tin, thay vì theo đuổi tối đa một chỉ số phân loại duy nhất.
+
+\blocksep
+
+\subsection{Khai phá luật kết hợp và thang điểm diễn giải được}
+
+\blocksep
+
+Khai phá luật kết hợp là một kỹ thuật quan trọng trong khai phá dữ liệu, nhằm phát hiện các mối đồng xuất hiện có ý nghĩa giữa các thuộc tính trong dữ liệu \cite{Lavrac1999}. Trong bối cảnh y sinh, luật kết hợp có thể được hiểu như các quy tắc dạng “nếu--thì”, trong đó một tổ hợp dấu hiệu hoặc yếu tố nguy cơ đi kèm với xác suất cao hơn hoặc thấp hơn của một tình trạng bệnh. Ưu điểm lớn nhất của biểu diễn này là tính minh bạch: tri thức được thể hiện ở mức gần với lập luận của con người hơn so với các vector trọng số trừu tượng của một mô hình phức tạp.
+
+\blocksep
+
+Khi áp dụng vào dữ liệu lâm sàng, quy trình khai phá luật thường bao gồm các bước tiền xử lý như xử lý thiếu dữ liệu, rời rạc hóa biến liên tục và mã hóa dữ liệu thành dạng phù hợp với việc sinh luật. Sau đó, các luật được đánh giá theo các độ đo như độ hỗ trợ, độ tin cậy và lift hoặc các tiêu chí thống nhất khác nhằm lọc ra những luật có đủ độ mạnh và tính ổn định \cite{Lavrac1999}. Tuy nhiên, số lượng luật có thể tăng rất nhanh, dẫn đến hiện tượng dư thừa và khó diễn giải nếu không có chiến lược chọn lọc thích hợp.
+
+\blocksep
+
+Một hướng thực dụng là không sử dụng toàn bộ tập luật như đầu ra cuối cùng, mà tổng hợp chúng thành một chỉ số hoặc thang điểm phân tầng nguy cơ. Cách làm này vừa giữ lại được tri thức diễn giải được, vừa giúp phương pháp dễ sử dụng hơn trong thực tế. Đây cũng là lý do pha nghiên cứu thứ nhất lựa chọn xây dựng \textit{protective score} từ các đặc trưng lâm sàng khớp với các luật ổn định, thay vì chỉ so sánh đơn thuần các mô hình phân loại chuẩn.
+
+\blocksep
+
+\section{Vai trò của điện tâm đồ và bất thường ST/T trong đánh giá nguy cơ tim mạch}
+
+\blocksep
+
+Điện tâm đồ là một trong những tín hiệu sinh lý cơ bản nhất trong tim mạch học, phản ánh hoạt động điện học của tim qua các pha khử cực và tái cực \cite{Clifford2006}. ECG có ưu điểm là không xâm lấn, chi phí thấp, dễ thu nhận và đã được sử dụng rộng rãi trong đánh giá nhiều tình trạng tim mạch khác nhau. Trong bối cảnh hỗ trợ đánh giá nguy cơ tim mạch, ECG có thể cung cấp tín hiệu bổ sung quan trọng bên cạnh dữ liệu lâm sàng, đặc biệt khi quan tâm đến các bất thường điện học liên quan đến thiếu máu cơ tim hoặc tái cực thất.
+
+\blocksep
+
+Trong một chu kỳ ECG điển hình, các thành phần như sóng P, phức bộ QRS, đoạn ST và sóng T tương ứng với các giai đoạn khác nhau của hoạt động điện tim. Trong số đó, đoạn ST và sóng T thường được xem là những vùng nhạy cảm với các thay đổi liên quan đến tái cực thất và thiếu máu cục bộ cơ tim \cite{Clifford2006}. Vì vậy, các bất thường ST/T từ lâu đã được coi là một nguồn tín hiệu lâm sàng quan trọng trong đánh giá tim mạch, dù không đồng nhất hoàn toàn với chẩn đoán xác định CAD.
+
+\blocksep
+
+Điều cần phân biệt ở đây là “tín hiệu liên quan về mặt cơ chế” không đồng nhất với “nhãn chẩn đoán cuối cùng”. Một mô hình ECG có thể học được cơ chế bất thường ST/T một cách nhất quán và có ý nghĩa lâm sàng, nhưng điều đó không đồng nghĩa với việc mô hình đó trực tiếp chẩn đoán bệnh động mạch vành ở mức xác định. Trong khóa luận này, vai trò của pha nghiên cứu thứ hai được đặt đúng ở mức đó: phân tích và kiểm chứng một cơ chế tín hiệu ECG hỗ trợ cho đánh giá nguy cơ tim mạch liên quan đến CAD, chứ không thay thế quy trình chẩn đoán lâm sàng chuẩn.
+
+\blocksep
+
+Từ góc nhìn học máy, ECG là một nguồn dữ liệu giàu cấu trúc hơn nhiều so với dữ liệu dạng bảng. Một mặt, điều này cho phép mô hình khai thác những mẫu hình tinh vi; mặt khác, nó làm tăng nguy cơ mô hình học nhầm các dấu hiệu không bền vững hoặc khó giải thích. Vì vậy, nếu chỉ dừng ở việc báo cáo hiệu năng phân loại trên ECG, giá trị hỗ trợ chuyên môn của mô hình vẫn còn hạn chế. Cần có những phương pháp cho phép kiểm tra xem mô hình thực sự đang dựa vào thành phần tín hiệu nào và liệu các thành phần đó có phù hợp với kỳ vọng lâm sàng hay không.
+
+\blocksep
+
+\section{Học máy diễn giải được và độ tin cậy trong y sinh}
+
+\blocksep
+
+\subsection{Hiệu năng dự đoán và giới hạn của các chỉ số tổng quát}
+
+\blocksep
+
+Trong các nghiên cứu học máy y sinh, hiệu năng dự đoán thường được lượng hóa bằng các chỉ số như accuracy, ROC-AUC, PR-AUC, balanced accuracy hoặc F1-score. Các chỉ số này cần thiết để đo khả năng phân biệt giữa các nhóm nhãn, nhưng chúng không tự động bảo đảm rằng mô hình phù hợp với nhu cầu sử dụng lâm sàng \cite{Topol2019}. Một mô hình có AUC cao vẫn có thể thiếu minh bạch, thiếu ổn định khi chuyển miền dữ liệu hoặc khai thác những tín hiệu không mong muốn.
+
+\blocksep
+
+Vì vậy, trong các bài toán rủi ro cao, đánh giá mô hình cần vượt ra ngoài một bảng điểm hiệu năng thuần túy. Đối với dữ liệu lâm sàng, điều quan trọng là tri thức rút ra có ổn định qua các lần chia dữ liệu hay không. Đối với dữ liệu ECG, điều quan trọng là cơ chế tín hiệu mà mô hình đang sử dụng có còn nhất quán khi chuyển sang dữ liệu ngoại bộ hay không. Đây cũng là lý do pha nghiên cứu thứ hai không được định vị như một nghiên cứu theo đuổi “hiệu năng phân loại cao nhất”, mà như một nghiên cứu \textit{kiểm chứng cơ chế} với nhiều lớp đánh giá bổ sung.
+
+\blocksep
+
+\subsection{Tính diễn giải và nhu cầu minh bạch}
+
+\blocksep
+
+Tính diễn giải là một yêu cầu cốt lõi trong các hệ thống học máy y sinh \cite{Lipton2018}. Trong môi trường lâm sàng, mô hình không chỉ cần đưa ra một dự đoán, mà còn cần cung cấp cơ sở để dự đoán đó có thể được kiểm tra, phản biện và sử dụng cùng với tri thức chuyên môn. Từ góc nhìn này, các mô hình hoặc chỉ số diễn giải được thường có ưu thế rõ ràng so với các kiến trúc “hộp đen” khó giải thích \cite{Rudin2019}.
+
+\blocksep
+
+Tính diễn giải có thể đạt được theo nhiều cách khác nhau. Một hướng là sử dụng các mô hình vốn dĩ dễ hiểu, như luật kết hợp hoặc thang điểm nguy cơ. Hướng khác là sử dụng các công cụ hậu giải thích (post-hoc explanation) để phân tích một mô hình mạnh hơn. Tuy nhiên, trong các bài toán y sinh có mức độ rủi ro cao, các giải thích hậu nghiệm chỉ thực sự có giá trị khi được kiểm chứng thêm bằng các thí nghiệm cho thấy mô hình phản ứng phù hợp với trực giác lâm sàng.
+
+\blocksep
+
+Trong khóa luận này, tính diễn giải được tiếp cận theo hai cách bổ sung. Pha thứ nhất sử dụng luật kết hợp và thang điểm để biểu diễn tri thức lâm sàng ở mức dễ hiểu. Pha thứ hai sử dụng phân tích phản thực trên ECG để kiểm tra xem mô hình có thực sự đang dựa vào bất thường ST/T hay không. Hai hướng này khác nhau về mặt kỹ thuật, nhưng thống nhất ở mục tiêu chung là tăng giá trị giải thích của hệ thống hỗ trợ đánh giá.
+
+\blocksep
+
+\subsection{Độ tin cậy, hiệu chỉnh và xác thực ngoại bộ}
+
+\blocksep
+
+Ngoài tính diễn giải, độ tin cậy là một tiêu chí không thể thiếu khi xem xét mô hình học máy trong y sinh. Độ tin cậy ở đây bao gồm nhiều khía cạnh: mô hình có ổn định khi chia lại dữ liệu hay không, xác suất dự đoán có được hiệu chỉnh hợp lý hay không, và kết quả có còn giữ được khi chuyển sang dữ liệu độc lập hay không \cite{Guo2017, Quinonero2009}. Trong nhiều trường hợp, một mô hình đạt kết quả tốt trên dữ liệu nội bộ nhưng giảm mạnh khi đánh giá ngoại bộ, cho thấy mô hình đã học những tín hiệu gắn với miền dữ liệu hơn là cơ chế mục tiêu.
+
+\blocksep
+
+Với dữ liệu lâm sàng, yêu cầu cơ bản là đánh giá không rò rỉ thông tin và kiểm tra độ ổn định của luật qua các lần chia dữ liệu hoặc các tập dữ liệu khác nhau. Với dữ liệu ECG, độ tin cậy còn gắn chặt với xác thực ngoại bộ và kiểm tra âm tính. Nếu mô hình chỉ hoạt động trên một bộ dữ liệu duy nhất hoặc không phân biệt được giữa tín hiệu mục tiêu và các vùng tín hiệu đối chứng, thì khó có thể coi đó là bằng chứng đủ mạnh cho giá trị cơ chế của mô hình.
+
+\blocksep
+
+Vì vậy, các thiết kế thí nghiệm dựa trên xác thực ngoại bộ, đối chứng âm tính, khoảng tin cậy bootstrap và nhiều lớp đo lường nhất quán là đặc biệt quan trọng. Đây cũng là nét đặc trưng của pha nghiên cứu thứ hai: không chỉ đánh giá trên PTB-XL nội bộ mà còn kiểm tra lại trên Georgia ngoại bộ, đồng thời so sánh tác động của chỉnh sửa ST/T với các cửa sổ đối chứng như pre-QRS, P/PR hoặc QRS.
+
+\blocksep
+
+\section{Phản thực và kiểm chứng cơ chế trong phân tích ECG}
+
+\blocksep
+
+Trong những năm gần đây, phản thực (giải thích phản thực) nổi lên như một hướng quan trọng trong giải thích mô hình học máy \cite{Wachter2017}. Ý tưởng cốt lõi là thay vì chỉ hỏi “đặc trưng nào quan trọng”, đặt câu hỏi “nếu thay đổi một thành phần cụ thể của đầu vào theo cách có kiểm soát thì dự đoán của mô hình sẽ thay đổi như thế nào”. Trong bối cảnh y sinh, cách đặt câu hỏi này gần với tư duy can thiệp và kiểm chứng cơ chế hơn so với việc chỉ xếp hạng mức độ quan trọng của đặc trưng.
+
+\blocksep
+
+Đối với dữ liệu ECG, phản thực có thể được thực hiện ở nhiều mức khác nhau. Ở mức đặc trưng, có thể chỉnh sửa một nhóm đặc trưng liên quan đến đoạn ST hoặc hình dạng sóng, sau đó đo mức giảm xác suất dự đoán của lớp bệnh. Ở mức dạng sóng, có thể trực tiếp chỉnh sửa một đoạn tín hiệu trên sóng ECG, ví dụ kéo vùng ST/T của một ca bất thường tiến dần về một mẫu bình thường, rồi đánh giá phản ứng của mô hình sau khi trích xuất lại đặc trưng.
+
+\blocksep
+
+Giá trị của phản thực nằm ở chỗ nó có thể tạo ra bằng chứng mạnh hơn so với attribution thuần túy. Nếu mô hình thực sự dựa vào cơ chế ST/T, thì việc chỉnh sửa ST/T theo hướng “bình thường hóa” phải làm giảm xác suất dự đoán lớp bất thường một cách có hệ thống. Hơn nữa, hiệu ứng này cần mạnh hơn đáng kể so với việc chỉnh sửa các vùng đối chứng không phải mục tiêu. Nếu khi tăng cường mức chỉnh sửa mà hiệu ứng cũng tăng theo một quan hệ đơn điệu, điều đó tạo thêm bằng chứng cho tính nhất quán của cơ chế được mô hình học.
+
+\blocksep
+
+Từ góc nhìn đánh giá nghiên cứu, đối chứng âm tính và liều -- đáp ứng là hai công cụ đặc biệt quan trọng. Negative controls cho biết mô hình có đang phản ứng riêng với vùng mục tiêu hay chỉ phản ứng với bất kỳ chỉnh sửa nào trên sóng. Dose-response cho biết hiệu ứng của chỉnh sửa có tăng dần một cách hợp lý khi can thiệp mạnh hơn hay không. Những nguyên tắc này phù hợp trực tiếp với pha nghiên cứu thứ hai, nơi cơ chế ST/T được đánh giá bằng cả phản thực mức đặc trưng, phản thực mức dạng sóng và các cửa sổ đối chứng âm tính.
+
+\blocksep
+
+\section{Khoảng trống nghiên cứu và định hướng của khóa luận}
+
+\blocksep
+
+Từ các phân tích trên có thể thấy rằng các nghiên cứu hiện có thường rơi vào một trong hai hướng. Hướng thứ nhất tập trung vào dữ liệu lâm sàng dạng bảng và xây dựng các công cụ phân tầng nguy cơ, nhưng nhiều phương pháp hoặc còn quá đơn giản để khai thác hết dữ liệu, hoặc quá phức tạp để diễn giải rõ ràng trong thực hành. Hướng thứ hai tập trung vào phân tích ECG bằng các mô hình học máy mạnh, nhưng nhiều nghiên cứu dừng lại ở việc báo cáo hiệu năng phân loại mà chưa cung cấp đủ bằng chứng cho cơ chế tín hiệu mà mô hình đang sử dụng.
+
+\blocksep
+
+Khoảng trống nổi bật ở đây là thiếu một framework hỗ trợ đánh giá có thể kết nối giá trị của hai nguồn dữ liệu này trong cùng một câu chuyện bệnh động mạch vành. Cụ thể, cần có một mô-đun lâm sàng giúp phân tầng nguy cơ theo hướng diễn giải được, và một mô-đun ECG giúp kiểm tra các bất thường điện học theo hướng có thể xác thực bằng phản thực, dữ liệu ngoại bộ và đối chứng âm tính. Khi đó, hệ thống không chỉ đưa ra dự đoán mà còn cung cấp bằng chứng ở cả mức yếu tố lâm sàng và mức cơ chế tín hiệu.
+
+\blocksep
+
+Bảng~\ref{tab:related_comparison} tổng hợp các hướng tiếp cận tiêu biểu trong lĩnh vực và so sánh với phương pháp đề xuất của khóa luận theo bốn tiêu chí chính: nguồn dữ liệu, phương pháp chính, tính diễn giải và mức độ xác thực ngoại bộ.
+
+\blocksep
+
+\begin{table}[H]
+\centering
+\caption{So sánh phương pháp đề xuất với các hướng tiếp cận liên quan}
+\label{tab:related_comparison}
+\begin{tabular}{p{0.24\linewidth}C{0.13\linewidth}p{0.20\linewidth}C{0.12\linewidth}p{0.17\linewidth}}
+\hline
+\textbf{Hướng tiếp cận} & \textbf{Nguồn dữ liệu} & \textbf{Phương pháp chính} & \textbf{Tính diễn giải} & \textbf{Xác thực ngoại bộ} \\
+\hline
+Thang điểm nguy cơ truyền thống \cite{Diamond1979, DAgostino2008} & Lâm sàng & Score công thức & Cao & Có (theo quần thể) \\
+ML trên dữ liệu bảng \cite{Krittanawong2017} & Lâm sàng & Gradient boosting, MLP & Thấp & Thường không \\
+Khai phá luật kết hợp đơn giản \cite{Lavrac1999} & Lâm sàng & Apriori, FP-Growth & Cao & Thường không \\
+Deep learning trên ECG \cite{Topol2019} & ECG & CNN, LSTM, Transformer & Thấp & Đôi khi \\
+XAI hậu nghiệm trên ECG \cite{Lipton2018} & ECG & LIME, SHAP, GradCAM & Trung bình & Hiếm \\
+\hline
+\textbf{Phương pháp đề xuất} & \textbf{Lâm sàng + ECG} & \textbf{Khai phá luật + bộ nhớ nguyên mẫu phản thực} & \textbf{Cao (hai mức)} & \textbf{Có (Georgia)} \\
+\hline
+\end{tabular}
+\end{table}
+
+\blocksep
+
+Đây cũng chính là định hướng của khóa luận. Trên nền một framework hỗ trợ đánh giá đa nguồn dữ liệu được đề xuất, pha nghiên cứu thứ nhất tập trung vào khai phá luật kết hợp trên dữ liệu CAD dạng bảng để xây dựng \textit{protective score} có khả năng phân tầng nguy cơ và ổn định qua đánh giá chéo không rò rỉ thông tin. Pha nghiên cứu thứ hai tập trung vào bài toán bất thường ST/T trên ECG 12 chuyển đạo, trong đó mô hình được kiểm tra bằng phản thực mức đặc trưng và mức dạng sóng, xác thực ngoại bộ và các đối chứng âm tính nhằm làm rõ tính hợp lý cơ chế của tín hiệu ECG hỗ trợ đánh giá tim mạch. Hai pha này là hai mô-đun phân tích cốt lõi của framework đề xuất, không thay thế nhau mà bổ sung cho nhau trong mục tiêu hỗ trợ đánh giá CAD.
+
+\blocksep
+
+\section{Tổng kết chương}
+
+\blocksep
+
+Chương này đã trình bày các cơ sở lý thuyết và các hướng nghiên cứu liên quan làm nền tảng cho khóa luận. Trước hết, chương đã làm rõ bối cảnh của bài toán hỗ trợ đánh giá bệnh động mạch vành theo hướng đa nguồn dữ liệu, trong đó dữ liệu lâm sàng và dữ liệu ECG giữ những vai trò bổ sung khác nhau. Tiếp theo, chương đã tổng hợp các hướng tiếp cận trong phân tầng nguy cơ CAD từ dữ liệu lâm sàng, đồng thời nhấn mạnh giá trị của các phương pháp diễn giải được như luật kết hợp và thang điểm nguy cơ.
+
+\blocksep
+
+Chương cũng đã phân tích vai trò của ECG, đặc biệt là bất thường ST/T, trong đánh giá nguy cơ tim mạch và chỉ ra nhu cầu phải kiểm chứng cơ chế tín hiệu thay vì chỉ báo cáo hiệu năng phân loại. Đồng thời, các khái niệm về tính diễn giải, độ tin cậy, xác thực ngoại bộ, phản thực, đối chứng âm tính và quan hệ liều -- đáp ứng đã được thảo luận như những tiêu chí quan trọng để đánh giá một mô hình học máy y sinh có giá trị hỗ trợ thực tế.
+
+\blocksep
+
+Trên cơ sở đó, chương làm rõ khoảng trống nghiên cứu mà khóa luận hướng tới: kết hợp một mô-đun lâm sàng có khả năng phân tầng nguy cơ CAD và một mô-đun ECG có khả năng kiểm chứng cơ chế bất thường điện học như một nguồn bằng chứng bổ trợ. Những nội dung này tạo tiền đề cho Chương~2, nơi pha nghiên cứu thứ nhất sẽ được trình bày chi tiết dưới góc nhìn khai phá luật kết hợp và xây dựng thang điểm phân tầng nguy cơ từ dữ liệu lâm sàng.

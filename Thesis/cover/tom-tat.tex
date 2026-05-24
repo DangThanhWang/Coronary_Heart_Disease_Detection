@@ -1,0 +1,26 @@
+\clearpage
+\phantomsection
+
+\addcontentsline{toc}{chapter}{Tóm tắt}
+\chapter*{\fontsize{13}{13}\selectfont\textbf{TÓM TẮT}}
+\fontsize{12}{15.6}\selectfont
+\noindent\textbf{Tóm tắt:}
+
+\blocksep
+
+Bệnh mạch vành (Coronary Artery Disease -- CAD) là một trong những nguyên nhân hàng đầu gây tử vong do bệnh lý tim mạch, trong đó việc đánh giá nguy cơ thường cần kết hợp dữ liệu lâm sàng dạng bảng với tín hiệu điện tâm đồ (ECG). Mỗi nguồn dữ liệu phản ánh một khía cạnh khác nhau của trạng thái bệnh, nhưng ít nghiên cứu hiện tại khai thác cả hai một cách có hệ thống. Từ yêu cầu đó, khóa luận đề xuất một framework hệ thống hỗ trợ đánh giá CAD theo hướng đa nguồn dữ liệu và tập trung hiện thực hai thành phần phân tích cốt lõi của framework này.
+
+\blocksep
+
+Ở pha nghiên cứu thứ nhất, khóa luận khai thác dữ liệu lâm sàng từ ba bộ dữ liệu Z-Alizadeh Sani, UCI Cleveland và UCI Hungarian. Trên các bộ dữ liệu này, một quy trình gồm tiền xử lý, rời rạc hóa, khai phá luật kết hợp và xây dựng \textit{protective score} từ các luật bảo vệ ổn định được thiết kế và đánh giá bằng cross-validation theo cơ chế không rò rỉ thông tin. Điểm số này phản ánh mức độ mà một bệnh nhân thỏa mãn các tổ hợp đặc trưng lâm sàng liên quan đến nhóm không mắc CAD, và được xây dựng hoàn toàn từ dữ liệu huấn luyện để đảm bảo tính khách quan trong đánh giá. Kết quả cho thấy \textit{protective score} có quan hệ nghịch rõ với nhãn CAD và cho phép phân tầng nguy cơ tương đối nhất quán trên cả ba bộ dữ liệu.
+
+\blocksep
+
+Ở pha nghiên cứu thứ hai, khóa luận khai thác ECG 12 chuyển đạo từ bộ dữ liệu PTB-XL và bộ dữ liệu Georgia ngoại bộ để phân tích cơ chế bất thường ST/T theo hướng giải thích được. Mô hình phân loại được xây dựng trên tập đặc trưng ECG trích xuất theo từng vùng sinh lý và được kiểm tra bằng nhiều hình thức bằng chứng bổ trợ, bao gồm phản thực mức đặc trưng, phản thực mức dạng sóng, đối chứng âm tính, quan hệ liều -- đáp ứng và xác thực ngoại bộ. Kết quả cho thấy mô hình phản ứng chọn lọc với vùng ST/T, qua đó bổ sung một nguồn bằng chứng tín hiệu có thể kiểm tra được cho bài toán đánh giá tim mạch liên quan đến CAD.
+
+\blocksep
+
+Nhìn chung, khóa luận hướng tới một khung hỗ trợ đánh giá CAD có khả năng diễn giải tốt hơn thông qua việc kết hợp phân tầng nguy cơ từ dữ liệu lâm sàng với kiểm chứng cơ chế từ dữ liệu ECG. Kết quả thực nghiệm trên nhiều bộ dữ liệu công khai cho thấy tính khả thi của hướng tiếp cận, trong khi lớp tích hợp báo cáo và lớp ứng dụng được giữ ở mức framework đề xuất để định hướng cho các nghiên cứu tiếp theo.
+
+\vspace{0.5cm}
+\noindent\textit{\textbf{Từ khóa:}} \textit{bệnh mạch vành; phân tầng nguy cơ; điện tâm đồ; phản thực.}
