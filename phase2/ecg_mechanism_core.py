@@ -35,12 +35,11 @@ def map_y(raw: np.ndarray) -> np.ndarray:
     return np.asarray([0 if int(v) == 0 else 1 for v in raw], dtype=int)
 
 
-def load_ptbxl_norm_sttc_samples(csv_root: Path) -> tuple[list[Sample], list[Sample], list[Sample], list[Sample]]:
+def load_ptbxl_norm_sttc_samples(csv_root: Path) -> tuple[list[Sample], list[Sample], list[Sample]]:
     train = [s for s in iter_train_env_samples(csv_root) if s.label in (0, 2)]
     val = [s for s in iter_csv_samples(csv_root, ["ValID"]) if s.label in (0, 2)]
     test = [s for s in iter_csv_samples(csv_root, ["Eval_ID"]) if s.label in (0, 2)]
-    ood = [s for s in iter_csv_samples(csv_root, ["Eval_OOD"]) if s.label == 4]
-    return train, val, test, ood
+    return train, val, test
 
 
 def make_hgbdt(seed: int) -> HistGradientBoostingClassifier:

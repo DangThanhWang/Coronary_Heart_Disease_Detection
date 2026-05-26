@@ -215,7 +215,7 @@ def main() -> None:
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    train_s, val_s, test_s, _ = load_ptbxl_norm_sttc_samples(args.csv_root)
+    train_s, val_s, test_s = load_ptbxl_norm_sttc_samples(args.csv_root)
 
     x_train, y_train_raw, _, _, train_fail = build_feature_matrix(train_s, args.pre, args.post, args.downsample)
     x_val, y_val_raw, _, _, val_fail = build_feature_matrix(val_s, args.pre, args.post, args.downsample)
@@ -311,4 +311,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

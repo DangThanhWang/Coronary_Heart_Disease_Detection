@@ -454,7 +454,7 @@ def main() -> None:
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     if args.target == "STTC":
-        train_s, val_s, test_s, ood_s = load_ptbxl_norm_sttc_samples(args.csv_root)
+        train_s, val_s, test_s = load_ptbxl_norm_sttc_samples(args.csv_root)
     else:
         load_diagnostic_codes, load_superclasses, load_task_samples = load_archived_task_helpers()
         superclasses = load_superclasses(args.ptbxl_root)
@@ -466,17 +466,10 @@ def main() -> None:
             diagnostic_codes=diagnostic_codes,
             mi_cohort=args.mi_cohort,
         )
-        ood_s = []
 
     x_train, y_train_raw, feature_names, train_ok, train_fail = build_feature_matrix(train_s, args.pre, args.post, args.downsample)
     x_val, y_val_raw, _, _, val_fail = build_feature_matrix(val_s, args.pre, args.post, args.downsample)
     x_test, y_test_raw, _, test_ok, test_fail = build_feature_matrix(test_s, args.pre, args.post, args.downsample)
-    if ood_s:
-        x_ood, _, _, ood_ok, ood_fail = build_feature_matrix(ood_s, args.pre, args.post, args.downsample)
-    else:
-        x_ood = np.zeros((0, x_test.shape[1]), dtype=float)
-        ood_ok = []
-        ood_fail = []
 
     if args.target == "STTC":
         y_train = map_y(y_train_raw)
@@ -578,7 +571,6 @@ def main() -> None:
     env_df.to_csv(args.out_dir / "leave_environment_out.csv", index=False)
 
     id_score = min_memory_distance(memory, scaler, x_test)
-    ood_score = min_memory_distance(memory, scaler, x_ood) if len(ood_ok) else np.asarray([], dtype=float)
     case_df = export_case_studies(
         model,
         scaler,
@@ -608,10 +600,9 @@ def main() -> None:
             "val_n": int(len(y_val)),
             "test_n": int(len(y_test)),
             "positive_test_n": int(len(pos_idx)),
-            "ood_n": int(len(ood_ok)),
             "n_features": int(len(feature_names)),
             "feature_group_sizes": {k: len(v) for k, v in group_cols.items()},
-            "failures": {"train": train_fail[:10], "val": val_fail[:10], "test": test_fail[:10], "ood": ood_fail[:10]},
+            "failures": {"train": train_fail[:10], "val": val_fail[:10], "test": test_fail[:10]},
         },
         "model": {
             "name": "HistGradientBoostingClassifier",
@@ -644,7 +635,6 @@ def main() -> None:
             "leave_env_out_mean_target_prob_drop": float(env_df["target_mean_prob_drop"].mean()),
             "memory_val95_threshold": val95_distance,
             "memory_id_flag_rate": float(np.mean(id_score > val95_distance)),
-            "memory_ptbxl_ood_flag_rate": float(np.mean(ood_score > val95_distance)) if ood_score.size else float("nan"),
         },
         "case_studies": {
             "n_cases": int(len(case_df)),

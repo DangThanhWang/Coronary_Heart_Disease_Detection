@@ -5,6 +5,10 @@ This README covers the tracked Phase 2 files in `phase2/`.
 The current workflow centers on the PTB-XL `NORM vs STTC` task and the external
 Georgia check.
 
+`prepare_ptbxl_multilead_data.py` now builds the PTB-XL Phase 2 CSV splits
+directly from raw PTB-XL, without requiring a pre-existing single-lead
+`Generated_PTBXL` folder.
+
 ## Files
 
 | File | Role |
